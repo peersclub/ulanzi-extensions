@@ -1,0 +1,9 @@
+{
+  "name": "@ulanzi-lab/broker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "App-agnostic AI-session state contract. Adapters write it; deck plugins read it.",
+  "main": "index.js",
+  "types": "index.d.ts"
+}

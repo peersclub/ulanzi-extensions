@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <title>Claude Deck</title>
+  <link rel="stylesheet" href="../libs/css/uspi.css" />
+  <style>
+    .panel { padding: 8px 12px; font-size: 12px; line-height: 1.5; }
+    .panel h4 { margin: 6px 0 4px; text-transform: uppercase; letter-spacing: .04em; opacity: .8; }
+    .panel p { margin: 0 0 8px; opacity: .82; }
+    .panel code { background: rgba(255,255,255,.08); padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', Menlo, monospace; }
+    .muted { opacity: .6; font-size: 11px; }
+    .hide { display: none; }
+  </style>
+</head>
+<body>
+  <div class="udpi-wrapper hidden uspi-wrapper">
+    <form id="pi">
+      <div class="uspi-item" id="row-keylist">
+        <div class="uspi-item-label">Keystroke</div>
+        <input class="uspi-item-value" type="text" id="keylist" placeholder="e.g. escape, enter, shift+tab" />
+      </div>
+
+      <div class="uspi-item hide" id="row-command">
+        <div class="uspi-item-label">Command</div>
+        <input class="uspi-item-value" type="text" id="command" placeholder="e.g. /compact" />
+      </div>
+
+      <div class="uspi-item hide" id="row-up">
+        <div class="uspi-item-label">Scroll up</div>
+        <input class="uspi-item-value" type="text" id="keylistUp" placeholder="up" />
+      </div>
+      <div class="uspi-item hide" id="row-down">
+        <div class="uspi-item-label">Scroll down</div>
+        <input class="uspi-item-value" type="text" id="keylistDown" placeholder="down" />
+      </div>
+    </form>
+
+    <div class="panel">
+      <h4>How keystrokes work</h4>
+      <p>On press, this key asks UlanziDeck to send the keystroke to the
+        <b>focused window</b> — so keep your Claude Code terminal focused.</p>
+      <p class="muted">Format is device-dependent. If a default doesn't fire, try
+        variants like <code>esc</code>/<code>escape</code>, <code>cmd+k</code>,
+        <code>shift+tab</code>. This field is the one on-device calibration point.</p>
+    </div>
+  </div>
+
+  <script src="../libs/js/constants.js"></script>
+  <script src="../libs/js/eventEmitter.js"></script>
+  <script src="../libs/js/timers.js"></script>
+  <script src="../libs/js/utils.js"></script>
+  <script src="../libs/js/ulanziApi.js"></script>
+  <script src="./inspector.js"></script>
+</body>
+</html>

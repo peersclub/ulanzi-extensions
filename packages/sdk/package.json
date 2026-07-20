@@ -1,0 +1,12 @@
+{
+  "name": "@ulanzi-lab/sdk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Official UlanziDeck plugin-common-node SDK (UlanziApi/Utils/RandomPort), vendored + typed.",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "dependencies": {
+    "ws": "8.21.0"
+  }
+}

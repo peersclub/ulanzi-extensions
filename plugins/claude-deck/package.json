@@ -1,0 +1,13 @@
+{
+  "name": "@ulanzi-lab/claude-deck",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Claude Deck plugin for UlanziDeck (D200X).",
+  "dependencies": {
+    "@ulanzi-lab/broker": "workspace:*",
+    "@ulanzi-lab/runtime": "workspace:*",
+    "@ulanzi-lab/sdk": "workspace:*",
+    "@ulanzi-lab/tiles": "workspace:*"
+  }
+}

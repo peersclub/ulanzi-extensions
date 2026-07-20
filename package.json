@@ -1,0 +1,22 @@
+{
+  "name": "ulanzi-lab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A reusable foundation for building Ulanzi D200X (UlanziDeck) plugins, plus the Claude Deck flagship plugin.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "dev": "node tools/dev.mjs",
+    "build": "node tools/build.mjs",
+    "package": "node tools/package.mjs",
+    "new:plugin": "node tools/scaffold/new-plugin.mjs",
+    "test": "node --test",
+    "link:claude": "node tools/dev.mjs --link-only claude-deck"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}

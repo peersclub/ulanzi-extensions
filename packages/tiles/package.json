@@ -1,0 +1,9 @@
+{
+  "name": "@ulanzi-lab/tiles",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Zero-dependency SVG tile kit for UlanziDeck keys (200x200). Returns data: URIs for setBaseDataIcon.",
+  "main": "index.js",
+  "types": "index.d.ts"
+}
