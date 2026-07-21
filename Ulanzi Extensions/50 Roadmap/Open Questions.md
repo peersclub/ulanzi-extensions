@@ -15,13 +15,6 @@ Candidates: `escape` vs `esc`, `shift+tab`, `cmd+k`, `Meta+…`, case sensitivit
   record the winner here, then update defaults in `plugins/claude-deck/src/app.js`.
 - See [[Hotkeys & Control]].
 
-## 2. Context % source
-
-Claude Code's statusline payload doesn't reliably include context-window usage.
-Options: parse the transcript JSONL for token totals; use a newer statusline field
-if one exists; estimate. Until then the Context tile shows 0.
-- See [[Adapter - Claude Code]].
-
 ## 3. Typing slash commands
 
 A single `hotkey` is a combo, not text — can we type `/compact`? Likely need a
@@ -39,4 +32,9 @@ across restarts (vs requiring a real folder / zip install).
 
 ## Answered
 
-_(none yet — move items here with the answer + date)_
+- **Context % source** (2026-07-21) — resolved by computing it from the session
+  **transcript JSONL**: the last assistant message's
+  `input + cache_creation + cache_read` tokens ÷ context window (200k, auto-bumped
+  to 1M when usage exceeds 200k or the model is a 1M variant). Implemented in
+  `adapters/claude-code/lib/context.mjs`, verified against real transcripts. See
+  [[Adapter - Claude Code]].

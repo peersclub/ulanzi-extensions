@@ -17,6 +17,15 @@
 <body>
   <div class="udpi-wrapper hidden uspi-wrapper">
     <form id="pi">
+      <div class="uspi-item hide" id="row-app">
+        <div class="uspi-item-label">App source</div>
+        <select class="uspi-item-value" id="app">
+          <option value="claude-code">Claude Code</option>
+          <option value="cursor">Cursor</option>
+          <option value="codex">Codex</option>
+        </select>
+      </div>
+
       <div class="uspi-item" id="row-keylist">
         <div class="uspi-item-label">Keystroke</div>
         <input class="uspi-item-value" type="text" id="keylist" placeholder="e.g. escape, enter, shift+tab" />

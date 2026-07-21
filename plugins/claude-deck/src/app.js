@@ -26,13 +26,19 @@ const mmss = (/** @type {number} */ s) => {
   return m >= 60 ? `${Math.floor(m / 60)}:${String(m % 60).padStart(2, "0")}h` : `${m}:${sec}`;
 };
 
-/** Build an INFO action that re-renders from broker state on a timer. */
+/**
+ * Build an INFO action that re-renders from broker state on a timer.
+ * The broker app id is configurable per key (Property Inspector "App" field),
+ * defaulting to claude-code — this is what lets one deck target Cursor/Codex/etc.
+ * once those adapters exist (see adapters/ and the Universal AI Deck idea).
+ */
 function infoAction(uuid, render) {
   return defineAction({
     uuid,
     active(b) {
       b.every(POLL_MS, () => {
-        const s = readState(APP) || {};
+        const app = b.settings.app || APP;
+        const s = readState(app) || {};
         b.setIcon(render(s));
       });
     },

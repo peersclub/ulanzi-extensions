@@ -11,48 +11,90 @@
   "Type": "JavaScript",
   "PrivateAPI": true,
   "SupportedInMultiActions": false,
-  "OS": [{ "Platform": "mac", "MinimumVersion": "12.0" }],
-  "Software": { "MinimumVersion": "3.0.11" },
+  "OS": [
+    {
+      "Platform": "mac",
+      "MinimumVersion": "12.0"
+    }
+  ],
+  "Software": {
+    "MinimumVersion": "3.0.11"
+  },
   "Actions": [
     {
       "Name": "Model",
       "Tooltip": "Current Claude model + context %",
       "Icon": "resources/info.png",
       "UUID": "com.ulanzi.ulanzideck.claudedeck.model",
-      "States": [{ "Image": "resources/info.png" }],
-      "Controllers": ["Keypad"]
+      "States": [
+        {
+          "Image": "resources/info.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
     },
     {
       "Name": "Context %",
       "Tooltip": "Context window used",
       "Icon": "resources/info.png",
       "UUID": "com.ulanzi.ulanzideck.claudedeck.context",
-      "States": [{ "Image": "resources/info.png" }],
-      "Controllers": ["Keypad"]
+      "States": [
+        {
+          "Image": "resources/info.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
     },
     {
       "Name": "Status",
       "Tooltip": "Live session status: thinking / awaiting input / done",
       "Icon": "resources/info.png",
       "UUID": "com.ulanzi.ulanzideck.claudedeck.status",
-      "States": [{ "Image": "resources/info.png" }],
-      "Controllers": ["Keypad"]
+      "States": [
+        {
+          "Image": "resources/info.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
     },
     {
       "Name": "Session Timer",
       "Tooltip": "Elapsed time of the current session",
       "Icon": "resources/info.png",
       "UUID": "com.ulanzi.ulanzideck.claudedeck.session",
-      "States": [{ "Image": "resources/info.png" }],
-      "Controllers": ["Keypad"]
+      "States": [
+        {
+          "Image": "resources/info.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
     },
     {
       "Name": "Lines Changed",
       "Tooltip": "Net lines changed this session",
       "Icon": "resources/info.png",
       "UUID": "com.ulanzi.ulanzideck.claudedeck.lines",
-      "States": [{ "Image": "resources/info.png" }],
-      "Controllers": ["Keypad"]
+      "States": [
+        {
+          "Image": "resources/info.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
     },
     {
       "Name": "Interrupt",
@@ -60,8 +102,14 @@
       "Icon": "resources/control.png",
       "PropertyInspectorPath": "property-inspector/inspector.html",
       "UUID": "com.ulanzi.ulanzideck.claudedeck.interrupt",
-      "States": [{ "Image": "resources/control.png" }],
-      "Controllers": ["Keypad"]
+      "States": [
+        {
+          "Image": "resources/control.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
     },
     {
       "Name": "Approve",
@@ -69,8 +117,14 @@
       "Icon": "resources/control.png",
       "PropertyInspectorPath": "property-inspector/inspector.html",
       "UUID": "com.ulanzi.ulanzideck.claudedeck.approve",
-      "States": [{ "Image": "resources/control.png" }],
-      "Controllers": ["Keypad"]
+      "States": [
+        {
+          "Image": "resources/control.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
     },
     {
       "Name": "Deny",
@@ -78,8 +132,14 @@
       "Icon": "resources/control.png",
       "PropertyInspectorPath": "property-inspector/inspector.html",
       "UUID": "com.ulanzi.ulanzideck.claudedeck.deny",
-      "States": [{ "Image": "resources/control.png" }],
-      "Controllers": ["Keypad"]
+      "States": [
+        {
+          "Image": "resources/control.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
     },
     {
       "Name": "Plan Mode",
@@ -87,8 +147,14 @@
       "Icon": "resources/control.png",
       "PropertyInspectorPath": "property-inspector/inspector.html",
       "UUID": "com.ulanzi.ulanzideck.claudedeck.plan",
-      "States": [{ "Image": "resources/control.png" }],
-      "Controllers": ["Keypad"]
+      "States": [
+        {
+          "Image": "resources/control.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
     },
     {
       "Name": "Slash Command",
@@ -96,16 +162,28 @@
       "Icon": "resources/control.png",
       "PropertyInspectorPath": "property-inspector/inspector.html",
       "UUID": "com.ulanzi.ulanzideck.claudedeck.slash",
-      "States": [{ "Image": "resources/control.png" }],
-      "Controllers": ["Keypad"]
+      "States": [
+        {
+          "Image": "resources/control.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
     },
     {
       "Name": "Transcript Scroll",
       "Tooltip": "Scroll the terminal/transcript with the dial",
       "Icon": "resources/dial.png",
       "UUID": "com.ulanzi.ulanzideck.claudedeck.scroll",
-      "States": [{ "Image": "resources/dial.png" }],
-      "Controllers": ["Encoder"]
+      "States": [
+        {
+          "Image": "resources/dial.png"
+        }
+      ],
+      "Controllers": [
+        "Encoder"
+      ]
     }
   ]
 }

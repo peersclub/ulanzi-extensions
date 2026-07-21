@@ -11,12 +11,13 @@ Feeds live Claude Code state into the [[Broker Contract|broker]]
 
 | Script | Wired as | Writes |
 |---|---|---|
-| `statusline.mjs` | Claude Code `statusLine` command | model, cwd, linesChanged, sessionSecs, costSession, contextPct* |
+| `statusline.mjs` | Claude Code `statusLine` command | model, cwd, linesChanged, sessionSecs, costSession, contextPct |
 | `hook.mjs <status>` | Claude Code hooks | status (+ lastTool on PreToolUse) |
+| `lib/context.mjs` | used by statusline | computes `contextPct` from the transcript |
 | `lib/broker-write.mjs` | shared | self-contained atomic merge writer |
 
-\* `contextPct` only when the statusline payload exposes it (probed defensively);
-otherwise the Context tile shows 0 — tracked in [[Open Questions]].
+**contextPct** is computed by `lib/context.mjs` from the transcript's token usage
+(input + cache tokens ÷ context window). See the resolved note in [[Open Questions]].
 
 ## Status mapping
 

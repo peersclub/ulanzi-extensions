@@ -11,11 +11,19 @@ let lastSent = null;
 const uuid = Utils.getQueryParams("uuid") || "";
 const isSlash = uuid.endsWith(".slash");
 const isScroll = uuid.endsWith(".scroll");
+const INFO = ["model", "context", "status", "session", "lines"];
+const isInfo = INFO.some((s) => uuid.endsWith("." + s));
 
 const el = (id) => document.getElementById(id);
-const fields = ["keylist", "command", "keylistUp", "keylistDown"];
+const fields = ["keylist", "command", "keylistUp", "keylistDown", "app"];
 
 function showRows() {
+  if (isInfo) {
+    // Info tiles: only choose which broker app to read; no keystroke.
+    el("row-app").classList.remove("hide");
+    el("row-keylist").classList.add("hide");
+    return;
+  }
   if (isSlash) el("row-command").classList.remove("hide");
   if (isScroll) {
     el("row-up").classList.remove("hide");

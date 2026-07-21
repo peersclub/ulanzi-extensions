@@ -60,4 +60,11 @@ the hotkey calibration point) and **docs/ONBOARDING.md** for a guided tour.
   installed `com.narlei.claudeusage` and `com.narlei.aicost` plugins do it well.
   Claude Deck focuses on the unbuilt half: live session activity + control.
 - **The broker is app-agnostic.** Point a new adapter (Cursor, Codex, …) at the
-  same schema and Claude Deck's tiles work unchanged.
+  same schema and Claude Deck's tiles work unchanged. Each info key has an
+  **App source** setting (`claude-code` / `cursor` / `codex`) in its Property
+  Inspector, so one deck can mix tools.
+
+## License
+
+MIT — see [LICENSE](./LICENSE). Vendored Ulanzi SDK code under `vendor/` is
+Apache-2.0 (see `vendor/NOTICE.md`).

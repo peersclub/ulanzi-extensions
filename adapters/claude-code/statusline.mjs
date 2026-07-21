@@ -6,6 +6,7 @@
 // Wire it in ~/.claude/settings.json:
 //   "statusLine": { "type": "command", "command": "node /ABS/PATH/statusline.mjs" }
 import { write, readStdinJson } from "./lib/broker-write.mjs";
+import { contextFromTranscript } from "./lib/context.mjs";
 
 const j = await readStdinJson();
 
@@ -18,14 +19,16 @@ const linesChanged = added + removed;
 const sessionSecs = cost.total_duration_ms ? Math.round(cost.total_duration_ms / 1000) : undefined;
 const costSession = typeof cost.total_cost_usd === "number" ? cost.total_cost_usd : undefined;
 
-// Context %: not always present in the statusline payload. Try known/likely
-// fields defensively; leave undefined (tile shows 0) if absent. `exceeds_200k`
-// is a coarse fallback signal some versions expose.
+// Context %: prefer an explicit field if a Claude Code version provides one;
+// otherwise compute it from the transcript's token usage (the reliable path).
 let contextPct;
 const ctx = j?.context || j?.token_usage || {};
 if (typeof ctx.used_pct === "number") contextPct = ctx.used_pct;
 else if (typeof ctx.percent === "number") contextPct = ctx.percent;
-else if (typeof j?.exceeds_200k_tokens === "boolean") contextPct = j.exceeds_200k_tokens ? 100 : undefined;
+else {
+  const fromTranscript = await contextFromTranscript(j?.transcript_path);
+  if (fromTranscript) contextPct = fromTranscript.pct;
+}
 
 const patch = { model, cwd, linesChanged };
 if (sessionSecs != null) patch.sessionSecs = sessionSecs;
