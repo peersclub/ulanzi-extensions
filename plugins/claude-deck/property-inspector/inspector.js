@@ -17,6 +17,32 @@ const isInfo = INFO.some((s) => uuid.endsWith("." + s));
 const el = (id) => document.getElementById(id);
 const fields = ["keylist", "command", "keylistUp", "keylistDown", "app"];
 
+// The "right data" to pre-fill per action, so the inspector is never blank and
+// keys work out of the box. Keyed by the action's last UUID segment. These match
+// the code defaults in src/app.js.
+const key = uuid.split(".").pop();
+const DEFAULTS = {
+  interrupt: { keylist: "escape" },
+  approve: { keylist: "enter" },
+  deny: { keylist: "escape" },
+  plan: { keylist: "shift+tab" },
+  slash: { command: "/compact" },
+  scroll: { keylistUp: "up", keylistDown: "down" },
+}[key] || {};
+
+// Fill any still-empty field with its default, then persist once so the value
+// is real (not just displayed). Called after saved settings have loaded.
+let defaultsApplied = false;
+function applyDefaults() {
+  if (defaultsApplied) return;
+  defaultsApplied = true;
+  let changed = false;
+  for (const [f, v] of Object.entries(DEFAULTS)) {
+    if (el(f) && !el(f).value) { el(f).value = v; changed = true; }
+  }
+  if (changed) save();
+}
+
 function showRows() {
   if (isInfo) {
     // Info tiles: only choose which broker app to read; no keystroke.
@@ -68,13 +94,19 @@ $UD.connect();
 $UD.onConnected(() => {
   document.querySelector(".udpi-wrapper")?.classList.remove("hidden");
   $UD.getSettings();
+  // If no saved settings arrive shortly (brand-new key), fill the defaults so
+  // the inspector is never blank.
+  setTimeout(applyDefaults, 400);
 });
 
 $UD.onDidReceiveSettings((msg) => {
   const p = msg && (msg.param || msg.settings);
-  if (!p || typeof p !== "object") return;
-  if (lastSent && JSON.stringify({ ...settings, ...p }) === lastSent) return; // our own echo
-  populate(p);
+  if (p && typeof p === "object") {
+    if (lastSent && JSON.stringify({ ...settings, ...p }) === lastSent) return; // our own echo
+    populate(p);
+  }
+  // Fill any field the saved settings didn't cover.
+  applyDefaults();
 });
 
 for (const f of fields) el(f)?.addEventListener("input", save);
