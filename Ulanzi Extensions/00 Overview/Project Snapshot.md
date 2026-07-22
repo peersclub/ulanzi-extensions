@@ -33,7 +33,7 @@ Claude Deck focuses on the *unbuilt* half:
 
 ## Where things are
 
-- **Code / repo:** `/Users/Victor/Projects22/ulanzi-lab/`
+- **Code / repo:** the `ulanzi-lab` repo root
 - **This vault:** `ulanzi-lab/Ulanzi Extensions/`
 - **Installed plugins on this Mac:** `~/Library/Application Support/Ulanzi/UlanziDeck/Plugins/`
 - **Broker state:** `~/.ulanzi-ai/claude-code.json`

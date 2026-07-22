@@ -48,7 +48,7 @@ blocks the text so the model never sees it.
 
 **At launch** — `ULANZI_SESSION_NAME="backend" claude`.
 
-Otherwise it's the project folder (e.g. `ulanzi-lab`, `clarity-ai`).
+Otherwise it's the project folder (e.g. `ulanzi-lab`, `my-api`).
 
 > [!note] Why a hook, not the command's !bash
 > There is no `CLAUDE_SESSION_ID` env var, so a slash command's `!bash` can't

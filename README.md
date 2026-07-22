@@ -1,8 +1,15 @@
 # ulanzi-lab
 
+[![CI](https://github.com/peersclub/ulanzi-extensions/actions/workflows/ci.yml/badge.svg)](https://github.com/peersclub/ulanzi-extensions/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A reusable foundation for building **UlanziDeck (Ulanzi D200X)** plugins, plus
 the flagship **Claude Deck** plugin: live Claude Code session activity + two-way
 control on your deck.
+
+> Turn your Ulanzi deck into a power-user surface for AI coding tools — see which
+> model/session is running, context %, a status light across terminals, and
+> control keys — with a foundation that makes new plugins cheap to build.
 
 ## Why this exists
 
@@ -63,6 +70,14 @@ the hotkey calibration point) and **docs/ONBOARDING.md** for a guided tour.
   same schema and Claude Deck's tiles work unchanged. Each info key has an
   **App source** setting (`claude-code` / `cursor` / `codex`) in its Property
   Inspector, so one deck can mix tools.
+
+## Contributing
+
+Contributions welcome — **you don't need the hardware** to work on packages,
+tiles, adapters, or tests. See **[CONTRIBUTING.md](CONTRIBUTING.md)** and
+**[docs/CONVENTIONS.md](docs/CONVENTIONS.md)**. Good first areas: a new
+[tile](packages/tiles), a new AI-tool [adapter](adapters), or a new plugin
+(`node tools/scaffold/new-plugin.mjs <name>`).
 
 ## License
 

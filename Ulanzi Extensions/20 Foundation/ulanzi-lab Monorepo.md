@@ -4,7 +4,7 @@ tags: [foundation]
 
 # ulanzi-lab Monorepo
 
-The reusable foundation. pnpm workspace at `/Users/Victor/Projects22/ulanzi-lab/`.
+The reusable foundation. A pnpm workspace at the repo root.
 
 ## Layout
 
