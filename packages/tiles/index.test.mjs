@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { KpiTile, StatusDot, GaugeTile, SparkTile, ActionTile } from "./index.js";
+import { KpiTile, StatusDot, GaugeTile, SparkTile, ActionTile, NameTile } from "./index.js";
 
 function decode(dataUrl) {
   const m = /^data:image\/svg\+xml;base64,(.+)$/.exec(dataUrl);
@@ -36,4 +36,27 @@ test("all tile text is xml-escaped (no raw angle brackets in content)", () => {
   const svg = decode(KpiTile({ title: "t", value: "a & b <c>" }));
   assert.match(svg, /a &amp; b &lt;c&gt;/);
   assert.doesNotMatch(svg, /<c>/); // raw injection must not survive
+});
+
+test("NameTile truncates long names and renders", () => {
+  const svg = decode(NameTile({ name: "a-very-long-project-name", sub: "2 live" }));
+  assert.match(svg, /…/);
+  assert.match(svg, /SESSION/);
+});
+
+// Regression guard for the on-device render bug: Ulanzi Studio uses Qt's QSvg
+// (SVG Tiny 1.2), which does NOT support 8-digit hex colors (#RRGGBBAA). A tile
+// containing one renders blank on the deck. Every tile must avoid them.
+test("no tile emits an 8-digit hex color (QSvg incompatible)", () => {
+  const tiles = [
+    KpiTile({ title: "M", value: "x", sub: "y" }),
+    GaugeTile({ label: "c", pct: 50 }),
+    StatusDot({ status: "thinking", sub: "s" }),
+    SparkTile({ label: "t", values: [1, 2, 3], value: 3 }),
+    ActionTile({ glyph: "X", caption: "go" }),
+    NameTile({ name: "proj", sub: "1 live" }),
+  ].map(decode);
+  for (const svg of tiles) {
+    assert.equal(/#[0-9a-fA-F]{8}\b/.test(svg), false, "8-digit hex found: " + svg.slice(0, 80));
+  }
 });

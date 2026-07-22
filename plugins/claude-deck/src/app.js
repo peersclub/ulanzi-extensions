@@ -12,8 +12,8 @@
  * intentionally NOT here (the narlei plugins own those on adjacent keys).
  */
 import { definePlugin, defineAction } from "@ulanzi-lab/runtime";
-import { readState } from "@ulanzi-lab/broker";
-import { KpiTile, GaugeTile, StatusDot, ActionTile, palette } from "@ulanzi-lab/tiles";
+import { readState, currentSession } from "@ulanzi-lab/broker";
+import { KpiTile, GaugeTile, StatusDot, ActionTile, NameTile, palette } from "@ulanzi-lab/tiles";
 
 const APP = "claude-code";
 const P = "com.ulanzi.ulanzideck.claudedeck";
@@ -38,7 +38,9 @@ function infoAction(uuid, render) {
     active(b) {
       b.every(POLL_MS, () => {
         const app = b.settings.app || APP;
-        const s = readState(app) || {};
+        // Follow the session you most recently interacted with; fall back to the
+        // legacy single-file state (manual priming / no multi-session adapter).
+        const s = currentSession(app) || readState(app) || {};
         b.setIcon(render(s));
       });
     },
@@ -53,8 +55,19 @@ const Context = infoAction(`${P}.context`, (s) =>
   GaugeTile({ label: "Context", pct: s.contextPct ?? 0 })
 );
 
+// Status subtitle shows WHICH session the light belongs to — key when several
+// terminals are running, so a green "done" is unambiguous.
 const Status = infoAction(`${P}.status`, (s) =>
-  StatusDot({ status: (s.stale ? "idle" : s.status) || "idle", stale: s.stale })
+  StatusDot({ status: (s.stale ? "idle" : s.status) || "idle", stale: s.stale, sub: s.name })
+);
+
+// The session/terminal the deck is currently following, + how many are live.
+const Name = infoAction(`${P}.name`, (s) =>
+  NameTile({
+    name: s.name || "—",
+    sub: s.liveCount > 1 ? `${s.liveCount} live` : s.status || "",
+    dim: s.stale,
+  })
 );
 
 const Session = infoAction(`${P}.session`, (s) =>
@@ -112,5 +125,5 @@ const Scroll = defineAction({
 
 definePlugin({
   uuid: P,
-  actions: [Model, Context, Status, Session, Lines, Interrupt, Approve, Deny, Plan, Slash, Scroll],
+  actions: [Model, Context, Status, Name, Session, Lines, Interrupt, Approve, Deny, Plan, Slash, Scroll],
 }).start();

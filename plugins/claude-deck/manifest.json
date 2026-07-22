@@ -67,6 +67,15 @@
       "PropertyInspectorPath": "property-inspector/inspector.html"
     },
     {
+      "Name": "Session Name",
+      "Tooltip": "Which terminal/session the deck is following (+ live count)",
+      "Icon": "resources/info.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.name",
+      "States": [{ "Image": "resources/info.png" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
+    },
+    {
       "Name": "Session Timer",
       "Tooltip": "Elapsed time of the current session",
       "Icon": "resources/info.png",

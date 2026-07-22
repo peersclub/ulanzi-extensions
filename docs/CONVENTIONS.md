@@ -39,6 +39,16 @@ b.setIcon(KpiTile({ title: "Model", value: "sonnet", sub: "62% ctx" }));
 Canvas size is **200×200**. `resources/*.png` are only for the deck's action
 list, never the live face.
 
+> [!warning] QSvg (SVG Tiny 1.2) only — verified on-device
+> Ulanzi Studio renders keys with Qt's QSvg engine, which implements **SVG Tiny
+> 1.2**. Anything outside that spec makes the key render **blank / fall back to
+> the static icon** (the "just colored" symptom). Known landmines:
+> - **No 8-digit hex colors** (`#RRGGBBAA`). Use `rgba(r,g,b,a)` instead. This one
+>   cost a debugging session; there's a regression test in `packages/tiles`.
+> - Prefer `rgba()` / 6-digit hex, basic shapes, `<text>`, `<polyline>`. Avoid
+>   CSS Color 4, filters, and modern SVG2 features.
+> The tile kit already complies; keep new tiles inside SVG Tiny 1.2.
+
 ## Runtime idiom
 
 Use `@ulanzi-lab/runtime` (`defineAction` / `definePlugin`) instead of hand-rolling

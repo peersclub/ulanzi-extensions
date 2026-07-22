@@ -69,8 +69,11 @@ function label(o) {
   const a = o.anchor ?? "middle";
   const fill = o.fill ?? palette.text;
   const common = `font-family="${FONT}" font-size="${o.size}" font-weight="${w}" text-anchor="${a}"`;
+  // NOTE: use rgba(), not 8-digit hex (#RRGGBBAA). Ulanzi Studio renders keys with
+  // Qt's QSvg engine (SVG Tiny 1.2), which does not support 8-digit hex and will
+  // silently drop the whole tile to the static icon. See docs/CONVENTIONS.md.
   return (
-    `<text x="${o.x + 1.5}" y="${o.y + 1.5}" ${common} fill="#00000088">${t}</text>` +
+    `<text x="${o.x + 1.5}" y="${o.y + 1.5}" ${common} fill="rgba(0,0,0,0.55)">${t}</text>` +
     `<text x="${o.x}" y="${o.y}" ${common} fill="${fill}">${t}</text>`
   );
 }
@@ -153,6 +156,23 @@ export function SparkTile({ label: cap, values, accent = palette.accent, value }
     label({ x: SIZE / 2, y: 48, size: 26, text: cap.toUpperCase(), weight: 700, fill: palette.dim }) +
       (value != null ? label({ x: SIZE / 2, y: 82, size: 34, text: value, weight: 800 }) : "") +
       `<polyline points="${pts}" fill="none" stroke="${accent}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>`
+  );
+}
+
+/**
+ * Name tile: which session/terminal the deck is currently following. Font size
+ * adapts to length and long names are truncated so they always fit the key.
+ * @param {{name:string, sub?:string, accent?:string, dim?:boolean}} o
+ */
+export function NameTile({ name, sub, accent = palette.accent, dim }) {
+  const n = String(name || "—");
+  const short = n.length > 12 ? n.slice(0, 11) + "…" : n;
+  const size = short.length > 9 ? 30 : short.length > 6 ? 40 : 50;
+  return doc(
+    stripe(dim ? palette.dim : accent) +
+      label({ x: SIZE / 2, y: 56, size: 24, text: "SESSION", weight: 700, fill: palette.dim }) +
+      label({ x: SIZE / 2, y: 120, size, text: short, weight: 800, fill: dim ? palette.dim : palette.text }) +
+      (sub ? label({ x: SIZE / 2, y: 164, size: 24, text: sub, fill: palette.dim }) : "")
   );
 }
 

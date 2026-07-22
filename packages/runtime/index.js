@@ -13,6 +13,24 @@
  *   definePlugin({ uuid: "com.ulanzi.ulanzideck.foo", actions: [Foo] }).start();
  */
 import UlanziApi from "@ulanzi-lab/sdk";
+import { appendFileSync, mkdirSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
+
+// Lightweight always-on file logger for on-device debugging. UlanziDeck captures
+// plugin stdout only in a binary .xlog, so we tee key lifecycle events to a plain
+// text file we can read. Cheap and safe.
+// Off by default; enable with ULANZI_DEBUG=1 (or a truthy value) when diagnosing
+// on-device issues. Kept because the deck's only other logs are binary .xlog.
+const DBG_ON = !!process.env.ULANZI_DEBUG;
+const DBG_FILE = join(homedir(), ".ulanzi-ai", "claude-deck.log");
+function dbg(...a) {
+  if (!DBG_ON) return;
+  try {
+    mkdirSync(join(homedir(), ".ulanzi-ai"), { recursive: true });
+    appendFileSync(DBG_FILE, `[${new Date().toISOString()}] ${a.join(" ")}\n`);
+  } catch {}
+}
 
 /**
  * A live button instance (one per placed key = one `context`). Handlers get this
@@ -35,6 +53,10 @@ export class Button {
 
   /** Push an SVG `data:` URI (or a state index) to the key face. */
   setIcon(/** @type {string} */ dataUri, /** @type {string} */ text) {
+    if (!this._loggedIcon) {
+      this._loggedIcon = true;
+      dbg("setIcon ctx=", this.context, "len=", dataUri?.length, "head=", String(dataUri).slice(0, 40));
+    }
     this.$UD.setBaseDataIcon(this.context, dataUri, text);
   }
   setStateIcon(/** @type {number} */ i, /** @type {string} */ text) {
@@ -144,11 +166,14 @@ export function definePlugin(cfg) {
     buttons,
     start() {
       $UD.connect(cfg.uuid);
-      $UD.onConnected(() => { log("connected"); cfg.onReady?.(); });
+      dbg("connect", cfg.uuid, "actions:", [...byUuid.keys()].join(","));
+      $UD.onConnected(() => { log("connected"); dbg("connected"); cfg.onReady?.(); });
 
       $UD.onAdd((d) => {
+        const { uuid, def } = defFor(d.context);
+        dbg("onAdd ctx=", d.context, "decodedUuid=", uuid, "matched=", !!def);
         const b = ensure(d.context);
-        if (d.param) { b.settings = d.param; defFor(d.context).def?.settings?.(b, d.param); }
+        if (d.param) { b.settings = d.param; def?.settings?.(b, d.param); }
       });
 
       $UD.onDidReceiveSettings((d) => {
@@ -158,7 +183,8 @@ export function definePlugin(cfg) {
 
       $UD.onSetActive((d) => {
         const b = ensure(d.context);
-        const { def } = defFor(d.context);
+        const { uuid, def } = defFor(d.context);
+        dbg("onSetActive ctx=", d.context, "decodedUuid=", uuid, "active=", d.active, "matched=", !!def);
         if (d.active) {
           b.active = true;
           def?.active?.(b);

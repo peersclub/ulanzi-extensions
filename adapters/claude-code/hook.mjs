@@ -1,27 +1,31 @@
 #!/usr/bin/env node
-// Claude Code hook -> broker status stamper.
+// Claude Code hook -> broker status stamper (per session).
 //
-// Claude Code runs a hook command per lifecycle event and pipes event JSON on
-// stdin. We map each event to a broker `status` (and capture the tool name on
-// PreToolUse). Pass the status as argv, e.g.:
+// Maps each lifecycle event to a broker `status`, keyed by the event's
+// session_id so concurrent terminals stay separate. Pass the status as argv:
 //   node hook.mjs thinking        (UserPromptSubmit)
 //   node hook.mjs tool            (PreToolUse)
 //   node hook.mjs awaiting_input  (Notification)
 //   node hook.mjs done            (Stop)
 //   node hook.mjs idle            (SessionStart)
-import { write, readStdinJson } from "./lib/broker-write.mjs";
+import { write, writeSession, readStdinJson, sessionName } from "./lib/broker-write.mjs";
 
 const status = process.argv[2] || "idle";
 const j = await readStdinJson();
 
+// "current session" pointer: advance activeTs only on user-facing moments —
+// a submitted prompt or a notification — so background tool churn in another
+// terminal never steals the deck away from the one you're driving.
+const INTERACTION = new Set(["thinking", "awaiting_input"]);
+
 const patch = { status };
-// On PreToolUse the event carries the tool being called — surface it on tiles.
 const tool = j?.tool_name || j?.tool?.name;
 if (status === "tool" && tool) patch.lastTool = tool;
+if (j?.cwd) patch.name = sessionName(j.cwd);
 
 try {
-  await write(patch);
+  if (j?.session_id) await writeSession(j.session_id, patch, { bumpActive: INTERACTION.has(status) });
+  else await write(patch);
 } catch {}
 
-// Hooks must exit 0 and not block; emit nothing on stdout.
 process.exit(0);

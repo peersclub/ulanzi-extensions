@@ -5,7 +5,7 @@
 //
 // Wire it in ~/.claude/settings.json:
 //   "statusLine": { "type": "command", "command": "node /ABS/PATH/statusline.mjs" }
-import { write, readStdinJson } from "./lib/broker-write.mjs";
+import { write, writeSession, readStdinJson, sessionName } from "./lib/broker-write.mjs";
 import { contextFromTranscript } from "./lib/context.mjs";
 
 const j = await readStdinJson();
@@ -32,13 +32,15 @@ else {
   if (fromTranscript) contextPct = fromTranscript.pct;
 }
 
-const patch = { model, cwd, linesChanged };
+const patch = { model, cwd, linesChanged, name: sessionName(cwd) };
 if (sessionSecs != null) patch.sessionSecs = sessionSecs;
 if (costSession != null) patch.costSession = costSession;
 if (contextPct != null) patch.contextPct = contextPct;
 
 try {
-  await write(patch);
+  // Statusline fires on render, not on interaction → never bump activeTs here.
+  if (j?.session_id) await writeSession(j.session_id, patch, { bumpActive: false });
+  else await write(patch); // no session id: fall back to the legacy single file
 } catch {
   /* never let broker IO break the user's statusline */
 }

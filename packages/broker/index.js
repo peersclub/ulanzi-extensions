@@ -9,12 +9,15 @@
  * fills the SAME {@link AiState} shape. The deck never learns tool-specific
  * details — add a tool by writing one adapter, with zero plugin changes.
  */
-import { promises as fs, readFileSync, watch } from "node:fs";
+import { promises as fs, readFileSync, readdirSync, watch } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
 /** Root dir for all broker state files. Kept beside other Ulanzi config conventions. */
 export const BROKER_DIR = join(homedir(), ".ulanzi-ai");
+
+/** Per-session state files live here: `<app>__<sessionId>.json`. */
+export const SESSIONS_DIR = join(BROKER_DIR, "sessions");
 
 /** @typedef {'idle'|'thinking'|'tool'|'awaiting_input'|'done'|'error'} SessionStatus */
 
@@ -32,6 +35,9 @@ export const BROKER_DIR = join(homedir(), ".ulanzi-ai");
  * @property {string}  [lastTool]      Most recent tool invoked, e.g. "Edit".
  * @property {string}  [cwd]           Working directory of the session.
  * @property {string}  [note]          Free-form short text for a tile.
+ * @property {string}  [name]          Human label for the session (project/terminal).
+ * @property {string}  [sessionId]     Owning session id (multi-session files).
+ * @property {number}  [activeTs]      Unix ms of last user interaction (current-session pick).
  * @property {number}  [ts]            Unix ms timestamp of last write (staleness).
  */
 
@@ -119,5 +125,105 @@ export function watchState(app, onChange) {
     clearTimeout(timer);
     clearTimeout(rearmTimer);
     if (watcher) { try { watcher.close(); } catch {} }
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Multi-session support
+//
+// Each concurrent session (terminal) of an app writes its own file so they
+// never clobber each other. The deck picks the "current" session — the one you
+// most recently interacted with — via `activeTs`, which adapters bump only on
+// user-facing events (a prompt, a notification), not on background tool churn.
+// ---------------------------------------------------------------------------
+
+/** How long since last interaction before a session stops being "live". */
+export const SESSION_LIVE_MS = 5 * 60 * 1000;
+/** Prune session files untouched for this long. */
+const SESSION_PRUNE_MS = 24 * 60 * 60 * 1000;
+
+const sanitizeId = (id) => String(id || "unknown").replace(/[^a-zA-Z0-9_-]/g, "_");
+
+function sessionFile(app, id) {
+  return join(SESSIONS_DIR, `${app}__${sanitizeId(id)}.json`);
+}
+
+/**
+ * Merge-write one session's state.
+ * @param {string} app
+ * @param {string} sessionId
+ * @param {Partial<import('./index.js').AiState> & {name?:string}} patch
+ * @param {{bumpActive?: boolean, now?: () => number}} [opts]
+ */
+export async function writeSession(app, sessionId, patch, opts = {}) {
+  const now = opts.now || Date.now;
+  await fs.mkdir(SESSIONS_DIR, { recursive: true });
+  const f = sessionFile(app, sessionId);
+  let cur = {};
+  try { cur = JSON.parse(await fs.readFile(f, "utf8")); } catch {}
+  const t = now();
+  const next = { ...cur, ...patch, app, sessionId, ts: t };
+  // activeTs = "last interaction". ONLY a real interaction sets it; a session
+  // that has never been interacted with stays at 0 so background writes can
+  // never rank it above a session you actually prompted.
+  next.activeTs = opts.bumpActive ? t : cur.activeTs ?? 0;
+  const tmp = f + ".tmp";
+  await fs.writeFile(tmp, JSON.stringify(next));
+  await fs.rename(tmp, f);
+  pruneSessions(now).catch(() => {});
+  return next;
+}
+
+/** Best-effort removal of session files untouched for SESSION_PRUNE_MS. */
+async function pruneSessions(now = Date.now) {
+  let files = [];
+  try { files = readdirSync(SESSIONS_DIR); } catch { return; }
+  for (const f of files) {
+    if (!f.endsWith(".json")) continue;
+    try {
+      const s = JSON.parse(readFileSync(join(SESSIONS_DIR, f), "utf8"));
+      if (now() - (s.ts || 0) > SESSION_PRUNE_MS) await fs.rm(join(SESSIONS_DIR, f), { force: true });
+    } catch {}
+  }
+}
+
+/**
+ * All sessions for an app, most-recently-interacted first.
+ * @returns {Array<import('./index.js').AiState & {sessionId:string, name?:string, activeTs?:number}>}
+ */
+export function listSessions(app) {
+  let files = [];
+  try {
+    files = readdirSync(SESSIONS_DIR).filter((f) => f.startsWith(`${app}__`) && f.endsWith(".json"));
+  } catch {
+    return [];
+  }
+  const out = [];
+  for (const f of files) {
+    try { out.push(JSON.parse(readFileSync(join(SESSIONS_DIR, f), "utf8"))); } catch {}
+  }
+  // Rank by interaction first (a real prompt always beats none), then by last
+  // write as a tiebreaker. NOT `activeTs || ts` — that lets a 0 activeTs fall
+  // back to write time and outrank a genuinely-interacted session.
+  out.sort((a, b) => (b.activeTs || 0) - (a.activeTs || 0) || (b.ts || 0) - (a.ts || 0));
+  return out;
+}
+
+/**
+ * The session the deck should display: the most-recently-interacted one.
+ * Adds `stale`, `sessionCount`, and `liveCount` for tile rendering.
+ * @param {string} app
+ * @param {{now?: () => number}} [opts]
+ */
+export function currentSession(app, opts = {}) {
+  const now = opts.now || Date.now;
+  const all = listSessions(app);
+  if (!all.length) return null;
+  const top = all[0];
+  return {
+    ...top,
+    stale: typeof top.ts === "number" && now() - top.ts > STALE_MS,
+    sessionCount: all.length,
+    liveCount: all.filter((s) => now() - (s.ts || 0) < SESSION_LIVE_MS).length,
   };
 }
