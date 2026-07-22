@@ -165,6 +165,20 @@ export function definePlugin(cfg) {
     $UD,
     buttons,
     start() {
+      // Resilience: the SDK emits 'error' on WS failure; with no listener Node
+      // throws and the whole plugin crashes. Studio can spawn us before its
+      // bridge is ready, so we must survive a failed connect and retry.
+      let reconnectT = null;
+      const scheduleReconnect = () => {
+        if (reconnectT) return;
+        reconnectT = setTimeout(() => {
+          reconnectT = null;
+          dbg("reconnecting");
+          try { $UD.connect(cfg.uuid); } catch (e) { dbg("reconnect failed", e?.message); scheduleReconnect(); }
+        }, 1500);
+      };
+      $UD.onError((e) => { dbg("ws error", String(e)); scheduleReconnect(); });
+
       $UD.connect(cfg.uuid);
       dbg("connect", cfg.uuid, "actions:", [...byUuid.keys()].join(","));
       $UD.onConnected(() => { log("connected"); dbg("connected"); cfg.onReady?.(); });
@@ -205,7 +219,7 @@ export function definePlugin(cfg) {
         if (Array.isArray(params)) params.forEach((p) => dispose(p.context));
       });
 
-      $UD.onClose(() => { for (const c of [...buttons.keys()]) dispose(c); });
+      $UD.onClose(() => { for (const c of [...buttons.keys()]) dispose(c); scheduleReconnect(); });
 
       const bye = () => { for (const c of [...buttons.keys()]) dispose(c); process.exit(0); };
       process.on("SIGINT", bye);

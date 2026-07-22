@@ -59,6 +59,26 @@ function doc(/** @type {string} */ body, /** @type {string} */ bg = palette.bg) 
 
 const FONT = "-apple-system,Helvetica,Arial,sans-serif";
 
+/** Usable width inside a key (200 minus side padding). */
+const FIT_W = 176;
+
+/**
+ * Pick a font size so `text` fits within `maxW` px at the given weight, clamped
+ * to [min, max]. QSvg (SVG Tiny 1.2) can't auto-fit via textLength, so we
+ * estimate: a bold sans glyph averages ~0.62em wide. Prevents the "Opus 4.8"
+ * -> "8" overflow-clipping on long values.
+ */
+function fitSize(text, max, { maxW = FIT_W, min = 16 } = {}) {
+  const len = String(text ?? "").length || 1;
+  return Math.max(min, Math.min(max, Math.floor(maxW / (len * 0.62))));
+}
+
+/** Truncate with an ellipsis so a value can't run past the key edge. */
+function ellipsize(text, n) {
+  const s = String(text ?? "");
+  return s.length > n ? s.slice(0, n - 1) + "…" : s;
+}
+
 /**
  * Centered text with a subtle shadow (legible on any background).
  * @param {{x:number,y:number,size:number,text:string|number,weight?:number,anchor?:string,fill?:string}} o
@@ -89,11 +109,12 @@ function stripe(/** @type {string} */ color) {
  */
 export function KpiTile({ title, value, sub, accent = palette.accent }) {
   const hasSub = sub != null && sub !== "";
+  const vSize = fitSize(value, 62); // shrink long values instead of clipping them
   return doc(
     stripe(accent) +
-      label({ x: SIZE / 2, y: 52, size: 26, text: title.toUpperCase(), weight: 700, fill: palette.dim }) +
-      label({ x: SIZE / 2, y: hasSub ? 118 : 130, size: 66, text: value, weight: 800 }) +
-      (hasSub ? label({ x: SIZE / 2, y: 162, size: 26, text: sub, fill: palette.dim }) : "")
+      label({ x: SIZE / 2, y: 52, size: fitSize(title.toUpperCase(), 26), text: title.toUpperCase(), weight: 700, fill: palette.dim }) +
+      label({ x: SIZE / 2, y: hasSub ? 118 : 130, size: vSize, text: value, weight: 800 }) +
+      (hasSub ? label({ x: SIZE / 2, y: 162, size: fitSize(sub, 26), text: sub, fill: palette.dim }) : "")
   );
 }
 
@@ -108,7 +129,7 @@ export function StatusDot({ status, sub, stale }) {
   return doc(
     `<circle cx="${cx}" cy="86" r="46" fill="none" stroke="${color}" stroke-width="10"/>` +
       label({ x: cx, y: 104, size: 52, text: s.glyph, weight: 800, fill: color }) +
-      label({ x: cx, y: 168, size: 28, text: sub ?? s.label, weight: 700, fill: stale ? palette.dim : palette.text })
+      label({ x: cx, y: 168, size: fitSize(sub ?? s.label, 28), text: ellipsize(sub ?? s.label, 16), weight: 700, fill: stale ? palette.dim : palette.text })
   );
 }
 
@@ -128,7 +149,7 @@ export function GaugeTile({ label: cap, pct, accent, sub }) {
       `<rect x="20" y="${barY}" width="${SIZE - 40}" height="20" rx="10" fill="${palette.track}"/>` +
       `<rect x="20" y="${barY}" width="${barW}" height="20" rx="10" fill="${color}"/>` +
       label({ x: SIZE / 2, y: 156, size: 44, text: `${clamped}%`, weight: 800 }) +
-      (sub ? label({ x: SIZE / 2, y: 184, size: 22, text: sub, fill: palette.dim }) : "")
+      (sub ? label({ x: SIZE / 2, y: 184, size: fitSize(sub, 22), text: ellipsize(sub, 22), fill: palette.dim }) : "")
   );
 }
 
@@ -154,7 +175,7 @@ export function SparkTile({ label: cap, values, accent = palette.accent, value }
     .join(" ");
   return doc(
     label({ x: SIZE / 2, y: 48, size: 26, text: cap.toUpperCase(), weight: 700, fill: palette.dim }) +
-      (value != null ? label({ x: SIZE / 2, y: 82, size: 34, text: value, weight: 800 }) : "") +
+      (value != null ? label({ x: SIZE / 2, y: 82, size: fitSize(value, 34), text: value, weight: 800 }) : "") +
       `<polyline points="${pts}" fill="none" stroke="${accent}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>`
   );
 }
@@ -165,14 +186,12 @@ export function SparkTile({ label: cap, values, accent = palette.accent, value }
  * @param {{name:string, sub?:string, accent?:string, dim?:boolean}} o
  */
 export function NameTile({ name, sub, accent = palette.accent, dim }) {
-  const n = String(name || "—");
-  const short = n.length > 12 ? n.slice(0, 11) + "…" : n;
-  const size = short.length > 9 ? 30 : short.length > 6 ? 40 : 50;
+  const short = ellipsize(name || "—", 16);
   return doc(
     stripe(dim ? palette.dim : accent) +
       label({ x: SIZE / 2, y: 56, size: 24, text: "SESSION", weight: 700, fill: palette.dim }) +
-      label({ x: SIZE / 2, y: 120, size, text: short, weight: 800, fill: dim ? palette.dim : palette.text }) +
-      (sub ? label({ x: SIZE / 2, y: 164, size: 24, text: sub, fill: palette.dim }) : "")
+      label({ x: SIZE / 2, y: 120, size: fitSize(short, 50), text: short, weight: 800, fill: dim ? palette.dim : palette.text }) +
+      (sub ? label({ x: SIZE / 2, y: 164, size: fitSize(sub, 24), text: ellipsize(sub, 20), fill: palette.dim }) : "")
   );
 }
 
@@ -183,6 +202,6 @@ export function NameTile({ name, sub, accent = palette.accent, dim }) {
 export function ActionTile({ glyph, caption, accent = palette.accent }) {
   return doc(
     label({ x: SIZE / 2, y: 108, size: 78, text: glyph, weight: 700, fill: accent }) +
-      label({ x: SIZE / 2, y: 168, size: 28, text: caption.toUpperCase(), weight: 700 })
+      label({ x: SIZE / 2, y: 168, size: fitSize(caption.toUpperCase(), 28), text: caption.toUpperCase(), weight: 700 })
   );
 }

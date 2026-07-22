@@ -95,6 +95,21 @@ up the new `dist/app.js`. The Node process is (re)spawned by UlanziDeck.
 `utf-8-validate` are external (ws's optional native speedups; absent is fine). A
 `createRequire` banner satisfies any leftover `require` in ws internals.
 
+## Runtime resilience (learned on-device)
+
+- `UlanziApi` extends `EventEmitter` and **emits `'error'` on WebSocket failure**.
+  With no `'error'` listener, Node throws and the **whole plugin crashes**. Studio
+  can spawn a plugin *before its bridge is ready*, so you must handle the error
+  and **reconnect** — otherwise the plugin dies on startup and no keys render.
+  `@ulanzi-lab/runtime` does this for you (onError + close → retry).
+
+## Text must fit the 200px key
+
+Fixed font sizes overflow: a centered 66px string longer than a few chars runs
+past both edges and gets clipped (e.g. "Opus 4.8" → "8"). QSvg can't auto-fit
+(`textLength` unsupported), so `@ulanzi-lab/tiles` computes font size from string
+length (`fitSize`) and ellipsizes. New tiles must do the same.
+
 ## Gotchas checklist
 
 - [ ] Main UUID 4 segments, action UUIDs 5+ and prefixed by it.

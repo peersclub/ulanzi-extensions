@@ -38,6 +38,17 @@ test("all tile text is xml-escaped (no raw angle brackets in content)", () => {
   assert.doesNotMatch(svg, /<c>/); // raw injection must not survive
 });
 
+test("KpiTile shrinks long values so they fit the key (no overflow-clipping)", () => {
+  const fontOf = (svg) => [...svg.matchAll(/font-size="(\d+)"[^>]*font-weight="800"/g)].map((m) => +m[1])[0];
+  for (const v of ["Opus 4.8", "claude-fable-5", "+7088", "1.2M"]) {
+    const size = fontOf(decode(KpiTile({ title: "M", value: v })));
+    const estWidth = v.length * 0.62 * size;
+    assert.ok(estWidth <= 176, `"${v}" estimated ${estWidth.toFixed(0)}px exceeds key width`);
+  }
+  // A short value should still be large.
+  assert.ok(fontOf(decode(KpiTile({ title: "M", value: "3" }))) >= 50);
+});
+
 test("NameTile truncates long names and renders", () => {
   const svg = decode(NameTile({ name: "a-very-long-project-name", sub: "2 live" }));
   assert.match(svg, /…/);
