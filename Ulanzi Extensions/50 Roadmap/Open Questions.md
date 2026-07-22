@@ -15,6 +15,16 @@ Candidates: `escape` vs `esc`, `shift+tab`, `cmd+k`, `Meta+…`, case sensitivit
   record the winner here, then update defaults in `plugins/claude-deck/src/app.js`.
 - See [[Hotkeys & Control]].
 
+## 6. Does slash-command expansion reach the UserPromptSubmit hook? (smoke test)
+
+`/session <name>` relies on Claude Code delivering the *expanded* command text
+(the `[[ulanzi-session]]` sentinel) to the `UserPromptSubmit` hook so it can
+intercept + block it. All isolation tests pass; the live invocation is unverified.
+- **To confirm:** run `/session test` in a terminal → the key should relabel to
+  "test" and the prompt should NOT appear in the conversation.
+- If it doesn't fire, fall back to a `UserPromptExpansion` hook (matcher
+  `session`) which carries `command_name` + `session_id` at expansion time.
+
 ## 3. Typing slash commands
 
 A single `hotkey` is a combo, not text — can we type `/compact`? Likely need a

@@ -32,7 +32,7 @@ else {
   if (fromTranscript) contextPct = fromTranscript.pct;
 }
 
-const patch = { model, cwd, linesChanged, name: sessionName(cwd) };
+const patch = { model, cwd, linesChanged, name: sessionName(cwd, j?.session_id) };
 if (sessionSecs != null) patch.sessionSecs = sessionSecs;
 if (costSession != null) patch.costSession = costSession;
 if (contextPct != null) patch.contextPct = contextPct;

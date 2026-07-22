@@ -12,6 +12,7 @@ import { basename, join } from "node:path";
 const APP = "claude-code";
 const DIR = join(homedir(), ".ulanzi-ai");
 const SESSIONS_DIR = join(DIR, "sessions");
+const NAMES_DIR = join(DIR, "names"); // per-session name overrides from `/session`
 const LEGACY_FILE = join(DIR, `${APP}.json`);
 
 const sanitizeId = (id) => String(id || "unknown").replace(/[^a-zA-Z0-9_-]/g, "_");
@@ -57,24 +58,29 @@ export async function readStdinJson() {
   try { return JSON.parse(raw); } catch { return {}; }
 }
 
-/**
- * A human label for a session: explicit env override, else the project folder
- * name, optionally with the git branch. Keeps the deck's "which terminal" clear.
- */
-export function sessionName(cwd) {
-  if (process.env.ULANZI_SESSION_NAME) return process.env.ULANZI_SESSION_NAME;
-  const base = cwd ? basename(cwd) : "";
-  const branch = gitBranch(cwd);
-  if (base && branch && branch !== "main" && branch !== "master") return `${base}:${branch}`;
-  return base || "claude";
+/** Persist a manual name for a session (from the `/session` command). */
+export async function setNameOverride(sessionId, name) {
+  if (!sessionId || !name) return;
+  await fs.mkdir(NAMES_DIR, { recursive: true });
+  await fs.writeFile(join(NAMES_DIR, sanitizeId(sessionId)), String(name).trim());
 }
 
-function gitBranch(cwd) {
+/** Read a session's manual name override, if any. */
+export function getNameOverride(sessionId) {
   try {
-    const head = readFileSync(join(cwd, ".git", "HEAD"), "utf8").trim();
-    const m = /ref:\s*refs\/heads\/(.+)$/.exec(head);
-    return m ? m[1] : "";
+    return readFileSync(join(NAMES_DIR, sanitizeId(sessionId)), "utf8").trim() || null;
   } catch {
-    return "";
+    return null;
   }
+}
+
+/**
+ * A human label for a session. Priority: manual `/session` override → the
+ * ULANZI_SESSION_NAME env → project folder (default, per your choice).
+ */
+export function sessionName(cwd, sessionId) {
+  const override = sessionId ? getNameOverride(sessionId) : null;
+  if (override) return override;
+  if (process.env.ULANZI_SESSION_NAME) return process.env.ULANZI_SESSION_NAME;
+  return (cwd ? basename(cwd) : "") || "claude";
 }

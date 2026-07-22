@@ -34,10 +34,26 @@ different. The deck follows the one you're interacting with and labels it.
 
 ## Naming a terminal
 
-```bash
-ULANZI_SESSION_NAME="backend" claude    # or export it in that shell
+Priority: **`/session` override → `ULANZI_SESSION_NAME` env → project folder.**
+
+**`/session <name>`** (recommended, rename anytime) — a real Claude Code command
+(`~/.claude/commands/session.md`) that expands to a sentinel; the
+`UserPromptSubmit` hook (which alone has the `session_id`) catches it, persists
+the name to `~/.ulanzi-ai/names/<id>`, switches the deck to that session, and
+blocks the text so the model never sees it.
+
+```
+/session api          # relabels THIS terminal's key to "api", deck follows
 ```
 
+**At launch** — `ULANZI_SESSION_NAME="backend" claude`.
+
 Otherwise it's the project folder (e.g. `ulanzi-lab`, `clarity-ai`).
+
+> [!note] Why a hook, not the command's !bash
+> There is no `CLAUDE_SESSION_ID` env var, so a slash command's `!bash` can't
+> tell which session it's in (it would mislabel same-folder terminals). Only the
+> hook receives `session_id`. The command is a thin trigger; the hook does the
+> work. See [[Open Questions]] for the one link that needs a live smoke test.
 
 Related: [[Claude Deck]] · [[Adapter - Claude Code]] · [[Open Questions]]
