@@ -19,11 +19,13 @@ const linesChanged = added + removed;
 const sessionSecs = cost.total_duration_ms ? Math.round(cost.total_duration_ms / 1000) : undefined;
 const costSession = typeof cost.total_cost_usd === "number" ? cost.total_cost_usd : undefined;
 
-// Context %: prefer an explicit field if a Claude Code version provides one;
-// otherwise compute it from the transcript's token usage (the reliable path).
+// Context %: prefer the official statusline field (`context_window.used_percentage`),
+// fall back to older field names, then compute from the transcript token usage.
 let contextPct;
+const cw = j?.context_window || {};
 const ctx = j?.context || j?.token_usage || {};
-if (typeof ctx.used_pct === "number") contextPct = ctx.used_pct;
+if (typeof cw.used_percentage === "number") contextPct = Math.round(cw.used_percentage);
+else if (typeof ctx.used_pct === "number") contextPct = ctx.used_pct;
 else if (typeof ctx.percent === "number") contextPct = ctx.percent;
 else {
   const fromTranscript = await contextFromTranscript(j?.transcript_path);
