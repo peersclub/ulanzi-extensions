@@ -49,6 +49,13 @@ export class Button {
     this.active = false;
     /** @type {Set<NodeJS.Timeout>} */
     this._timers = new Set();
+    /** @type {Set<() => void>} disposers (e.g. fs watchers) run on inactive/clear */
+    this._cleanups = new Set();
+  }
+
+  /** Register a teardown fn (e.g. an unwatch) run when the button deactivates. */
+  addCleanup(fn) {
+    if (typeof fn === "function") this._cleanups.add(fn);
   }
 
   /** Push an SVG `data:` URI (or a state index) to the key face. */
@@ -99,6 +106,8 @@ export class Button {
   _clearTimers() {
     for (const t of this._timers) { clearInterval(t); clearTimeout(t); }
     this._timers.clear();
+    for (const fn of this._cleanups) { try { fn(); } catch {} }
+    this._cleanups.clear();
   }
 }
 

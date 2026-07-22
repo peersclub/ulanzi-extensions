@@ -12,12 +12,14 @@
  * intentionally NOT here (the narlei plugins own those on adjacent keys).
  */
 import { definePlugin, defineAction } from "@ulanzi-lab/runtime";
-import { readState, currentSession } from "@ulanzi-lab/broker";
+import { readState, currentSession, watchSessions } from "@ulanzi-lab/broker";
 import { KpiTile, GaugeTile, StatusDot, ActionTile, NameTile, palette } from "@ulanzi-lab/tiles";
 
 const APP = "claude-code";
 const P = "com.ulanzi.ulanzideck.claudedeck";
-const POLL_MS = 1000;
+// Heartbeat only refreshes time-based staleness; live switches come from the
+// filesystem watch below (near-instant), not this tick.
+const STALENESS_MS = 3000;
 
 const mmss = (/** @type {number} */ s) => {
   if (!s || s < 0) return "0:00";
@@ -36,13 +38,15 @@ function infoAction(uuid, render) {
   return defineAction({
     uuid,
     active(b) {
-      b.every(POLL_MS, () => {
-        const app = b.settings.app || APP;
-        // Follow the session you most recently interacted with; fall back to the
-        // legacy single-file state (manual priming / no multi-session adapter).
-        const s = currentSession(app) || readState(app) || {};
-        b.setIcon(render(s));
-      });
+      const app = b.settings.app || APP;
+      // Follow the session you most recently interacted with; fall back to the
+      // legacy single-file state (manual priming / no multi-session adapter).
+      const draw = () => b.setIcon(render(currentSession(app) || readState(app) || {}));
+      draw(); // immediate
+      // Near-instant switches: redraw the moment any session file changes.
+      b.addCleanup(watchSessions(app, draw));
+      // Heartbeat for staleness decay (no file event fires when a session goes quiet).
+      b.every(STALENESS_MS, draw, { leading: false });
     },
   });
 }

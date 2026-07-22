@@ -210,6 +210,43 @@ export function listSessions(app) {
 }
 
 /**
+ * Watch the sessions directory and call `onChange` whenever any session file
+ * changes — so the deck can switch near-instantly instead of polling. Debounced
+ * (the atomic tmp+rename write fires multiple raw events). Re-arms if the dir
+ * doesn't exist yet. Returns an unwatch fn.
+ * @param {string} _app reserved (dir holds all apps); kept for call symmetry
+ * @param {() => void} onChange
+ */
+export function watchSessions(_app, onChange) {
+  let watcher = null;
+  let debounce = null;
+  let rearm = null;
+  const fire = () => {
+    clearTimeout(debounce);
+    debounce = setTimeout(() => { try { onChange(); } catch {} }, 50);
+  };
+  const arm = () => {
+    try {
+      watcher = watch(SESSIONS_DIR, fire);
+      watcher.on("error", reArm);
+    } catch {
+      reArm();
+    }
+  };
+  function reArm() {
+    if (watcher) { try { watcher.close(); } catch {} watcher = null; }
+    clearTimeout(rearm);
+    rearm = setTimeout(arm, 1000);
+  }
+  arm();
+  return () => {
+    clearTimeout(debounce);
+    clearTimeout(rearm);
+    if (watcher) { try { watcher.close(); } catch {} }
+  };
+}
+
+/**
  * The session the deck should display: the most-recently-interacted one.
  * Adds `stale`, `sessionCount`, and `liveCount` for tile rendering.
  * @param {string} app

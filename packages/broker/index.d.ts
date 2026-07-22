@@ -60,6 +60,8 @@ export function writeSession(
 
 export function listSessions(app: string): Array<AiState & { sessionId: string }>;
 
+export function watchSessions(app: string, onChange: () => void): () => void;
+
 export function currentSession(
   app: string,
   opts?: { now?: () => number }
