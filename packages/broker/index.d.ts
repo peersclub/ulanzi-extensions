@@ -17,6 +17,7 @@ export interface AiState {
   lastTool?: string;
   cwd?: string;
   note?: string;
+  ask?: { type: "permission"; tool?: string; cmd?: string; ts?: number } | null;
   name?: string;
   sessionId?: string;
   activeTs?: number;

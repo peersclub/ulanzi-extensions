@@ -28,6 +28,9 @@ const DEFAULTS = {
   plan: { keylist: "shift+tab" },
   slash: { command: "/compact" },
   scroll: { keylistUp: "up", keylistDown: "down" },
+  allow: { keylist: "enter" },
+  alwaysallow: { keylist: "down enter" },
+  reject: { keylist: "escape" },
 }[key] || {};
 
 // Fill any still-empty field with its default, then persist once so the value

@@ -197,11 +197,17 @@ export function NameTile({ name, sub, accent = palette.accent, dim }) {
 
 /**
  * Action tile: a glyph + caption for a control button (interrupt, approve, ...).
- * @param {{glyph:string, caption:string, accent?:string}} o
+ * Optional `sub` (e.g. the tool being asked about) and `dim` (inactive/contextual
+ * key with nothing to act on).
+ * @param {{glyph:string, caption:string, accent?:string, sub?:string, dim?:boolean}} o
  */
-export function ActionTile({ glyph, caption, accent = palette.accent }) {
+export function ActionTile({ glyph, caption, accent = palette.accent, sub, dim }) {
+  const gc = dim ? palette.dim : accent;
+  const tc = dim ? palette.dim : palette.text;
+  const gy = sub ? 96 : 108;
   return doc(
-    label({ x: SIZE / 2, y: 108, size: 78, text: glyph, weight: 700, fill: accent }) +
-      label({ x: SIZE / 2, y: 168, size: fitSize(caption.toUpperCase(), 28), text: caption.toUpperCase(), weight: 700 })
+    label({ x: SIZE / 2, y: gy, size: 74, text: glyph, weight: 700, fill: gc }) +
+      label({ x: SIZE / 2, y: 156, size: fitSize(caption.toUpperCase(), 28), text: caption.toUpperCase(), weight: 700, fill: tc }) +
+      (sub ? label({ x: SIZE / 2, y: 184, size: fitSize(sub, 22), text: ellipsize(sub, 20), fill: palette.dim }) : "")
   );
 }

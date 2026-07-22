@@ -26,6 +26,7 @@ const EVENTS = {
   PostToolUse: "thinking",
   Notification: "awaiting_input",
   Stop: "done",
+  PermissionRequest: "permission", // drives the contextual Allow/Always/Deny keys
 };
 
 function ourGroup(status) {
@@ -51,7 +52,11 @@ if (!settings.statusLine) {
 settings.hooks = settings.hooks || {};
 for (const [event, status] of Object.entries(EVENTS)) {
   const arr = (settings.hooks[event] = settings.hooks[event] || []);
-  const already = arr.some((g) => g._source === MARK);
+  // Skip if our tagged group exists OR any group already runs our hook for this
+  // status (prevents duplicate groups when settings were hand-edited earlier).
+  const already = arr.some(
+    (g) => g._source === MARK || (g.hooks || []).some((h) => (h.command || "").includes(`hook.mjs ${status}`))
+  );
   if (!already) arr.push(ourGroup(status));
 }
 

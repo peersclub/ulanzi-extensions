@@ -110,6 +110,44 @@ const Deny = controlAction(`${P}.deny`, "✕", "Deny", "escape");
 const Plan = controlAction(`${P}.plan`, "⇧", "Plan", "shift+tab");
 const Slash = controlAction(`${P}.slash`, "/", "Command", "");
 
+/**
+ * Contextual permission key: dim/no-op until the current session shows a
+ * permission prompt (broker `ask.type === "permission"`), then it lights up and
+ * its press sends the configured key(s). Keys are space-separated for multi-step
+ * selections (e.g. "down enter" to pick "always allow"). Follows the session
+ * being asked (PermissionRequest bumps activeTs), so it tracks the right terminal.
+ * @param {string} uuid @param {string} label @param {string} glyph
+ * @param {string} accent @param {string} defaultKeys
+ */
+function permAction(uuid, label, glyph, accent, defaultKeys) {
+  return defineAction({
+    uuid,
+    active(b) {
+      const app = b.settings.app || APP;
+      const draw = () => {
+        const s = currentSession(app) || {};
+        const ask = s.ask && s.ask.type === "permission" && !s.stale ? s.ask : null;
+        b.state.armed = !!ask;
+        b.setIcon(
+          ActionTile({ glyph, caption: label, accent, sub: ask ? ask.tool : "", dim: !ask })
+        );
+      };
+      draw();
+      b.addCleanup(watchSessions(app, draw));
+      b.every(STALENESS_MS, draw, { leading: false });
+    },
+    run(b) {
+      if (!b.state.armed) { b.toast(`No prompt to ${label.toLowerCase()}`); return; }
+      const keys = (b.settings.keylist || defaultKeys).trim().split(/\s+/);
+      keys.forEach((k, i) => { if (k) setTimeout(() => b.hotkey(k), i * 80); });
+    },
+  });
+}
+
+const Allow = permAction(`${P}.allow`, "Allow", "✓", palette.good, "enter");
+const AlwaysAllow = permAction(`${P}.alwaysallow`, "Always", "✓✓", palette.info, "down enter");
+const Reject = permAction(`${P}.reject`, "Deny", "✕", palette.crit, "escape");
+
 /** Encoder: rotate to scroll the transcript, press to jump to bottom. */
 const Scroll = defineAction({
   uuid: `${P}.scroll`,
@@ -129,5 +167,9 @@ const Scroll = defineAction({
 
 definePlugin({
   uuid: P,
-  actions: [Model, Context, Status, Name, Session, Lines, Interrupt, Approve, Deny, Plan, Slash, Scroll],
+  actions: [
+    Model, Context, Status, Name, Session, Lines,
+    Allow, AlwaysAllow, Reject,
+    Interrupt, Approve, Deny, Plan, Slash, Scroll,
+  ],
 }).start();

@@ -35,13 +35,32 @@ if (m) {
   process.exit(2);
 }
 
+// --- permission prompt (PermissionRequest hook) ---
+// Record what Claude is asking so the deck can light up contextual Allow/Always/
+// Deny keys and switch to this session. MUST NOT emit a decision (exit 0, no
+// stdout) so the normal TUI prompt still shows.
+if (status === "permission") {
+  const tool = j?.tool_name;
+  const ti = j?.tool_input || {};
+  const cmd = String(ti.command || ti.file_path || ti.path || ti.url || "").slice(0, 60);
+  const ask = { type: "permission", tool, cmd, ts: Date.now() };
+  const patch = { status: "awaiting_input", ask };
+  if (j?.cwd) patch.name = sessionName(j.cwd, sid);
+  try { if (sid) await writeSession(sid, patch, { bumpActive: true }); } catch {}
+  process.exit(0);
+}
+
 // --- normal status stamping ---
 // Advance the "current session" pointer only on user-facing moments.
 const INTERACTION = new Set(["thinking", "awaiting_input"]);
+// A pending permission ask is resolved once we move on (prompt submitted, a tool
+// starts running = it was allowed, turn ends, or a new session starts).
+const CLEARS_ASK = new Set(["thinking", "tool", "done", "idle"]);
 
 const patch = { status };
 const tool = j?.tool_name || j?.tool?.name;
 if (status === "tool" && tool) patch.lastTool = tool;
+if (CLEARS_ASK.has(status)) patch.ask = null;
 if (j?.cwd) patch.name = sessionName(j.cwd, sid);
 
 try {

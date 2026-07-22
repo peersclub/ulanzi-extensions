@@ -35,6 +35,8 @@ export const SESSIONS_DIR = join(BROKER_DIR, "sessions");
  * @property {string}  [lastTool]      Most recent tool invoked, e.g. "Edit".
  * @property {string}  [cwd]           Working directory of the session.
  * @property {string}  [note]          Free-form short text for a tile.
+ * @property {{type:'permission', tool?:string, cmd?:string, ts?:number}|null} [ask]
+ *                                     What Claude is currently asking (drives contextual keys).
  * @property {string}  [name]          Human label for the session (project/terminal).
  * @property {string}  [sessionId]     Owning session id (multi-session files).
  * @property {number}  [activeTs]      Unix ms of last user interaction (current-session pick).

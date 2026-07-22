@@ -181,6 +181,33 @@
       ]
     },
     {
+      "Name": "Allow",
+      "Tooltip": "Contextual: allow the current permission prompt (dim when none)",
+      "Icon": "resources/control.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.allow",
+      "States": [{ "Image": "resources/control.png" }],
+      "Controllers": ["Keypad"]
+    },
+    {
+      "Name": "Always Allow",
+      "Tooltip": "Contextual: allow and don't ask again (dim when none)",
+      "Icon": "resources/control.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.alwaysallow",
+      "States": [{ "Image": "resources/control.png" }],
+      "Controllers": ["Keypad"]
+    },
+    {
+      "Name": "Deny (prompt)",
+      "Tooltip": "Contextual: deny the current permission prompt (dim when none)",
+      "Icon": "resources/control.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.reject",
+      "States": [{ "Image": "resources/control.png" }],
+      "Controllers": ["Keypad"]
+    },
+    {
       "Name": "Transcript Scroll",
       "Tooltip": "Scroll the terminal/transcript with the dial",
       "Icon": "resources/dial.png",
