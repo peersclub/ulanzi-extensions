@@ -41,6 +41,7 @@ deck into a power-user control surface for AI coding tools, starting with Claude
 ### Adapters & data
 - [[Broker Contract]] — the app-agnostic state schema
 - [[Adapter - Claude Code]] — statusline + hooks
+- [[Multi-Session & Naming]] — many terminals, follow the one you're using
 - [[Future Adapters]] — Cursor, Codex, Gemini, Copilot
 
 ### Roadmap & reference
