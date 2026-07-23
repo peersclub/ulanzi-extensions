@@ -71,6 +71,7 @@ export class Button {
   }
   /** Inject a hotkey/combo into the focused window. */
   hotkey(/** @type {string} */ key) {
+    dbg("hotkey ->", JSON.stringify(key), "ctx=", this.context.slice(0, 40));
     this.$UD.hotkey(key);
   }
   toast(/** @type {string} */ msg) {

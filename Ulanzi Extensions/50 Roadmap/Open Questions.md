@@ -42,6 +42,14 @@ across restarts (vs requiring a real folder / zip install).
 
 ## Answered
 
+- **Hotkey injection works** (2026-07-23) — confirmed end-to-end on the real
+  D200X: pressing the contextual **Allow** key fired `y` and it landed in a text
+  field. macOS Accessibility is granted to Ulanzi Studio. Confirmed-working
+  `keylist` tokens: **plain letters (`y`/`n`) and `enter`**. Permission
+  detection also confirmed (keys light up on a real prompt). Still to calibrate:
+  the format for non-typing special keys — `escape` (Interrupt), `tab`/`shift+tab`
+  (Plan), arrows (Scroll, Always-allow navigation). See [[Hotkeys & Control]].
+
 - **Context % source** (2026-07-21) — resolved by computing it from the session
   **transcript JSONL**: the last assistant message's
   `input + cache_creation + cache_read` tokens ÷ context window (200k, auto-bumped
