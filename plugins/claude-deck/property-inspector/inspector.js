@@ -11,7 +11,7 @@ let lastSent = null;
 const uuid = Utils.getQueryParams("uuid") || "";
 const isSlash = uuid.endsWith(".slash");
 const isScroll = uuid.endsWith(".scroll");
-const INFO = ["model", "context", "status", "name", "session", "lines"];
+const INFO = ["model", "context", "status", "name", "mode", "session", "lines"];
 const isInfo = INFO.some((s) => uuid.endsWith("." + s));
 
 const el = (id) => document.getElementById(id);

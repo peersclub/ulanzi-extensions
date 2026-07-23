@@ -13,7 +13,7 @@
  */
 import { definePlugin, defineAction } from "@ulanzi-lab/runtime";
 import { readState, currentSession, watchSessions } from "@ulanzi-lab/broker";
-import { KpiTile, GaugeTile, StatusDot, ActionTile, NameTile, palette } from "@ulanzi-lab/tiles";
+import { KpiTile, GaugeTile, StatusDot, ActionTile, NameTile, ModeTile, palette } from "@ulanzi-lab/tiles";
 
 const APP = "claude-code";
 const P = "com.ulanzi.ulanzideck.claudedeck";
@@ -64,6 +64,9 @@ const Context = infoAction(`${P}.context`, (s) =>
 const Status = infoAction(`${P}.status`, (s) =>
   StatusDot({ status: (s.stale ? "idle" : s.status) || "idle", stale: s.stale, sub: s.name })
 );
+
+// Permission mode of the current session — why it does/doesn't prompt you.
+const Mode = infoAction(`${P}.mode`, (s) => ModeTile({ mode: s.mode }));
 
 // The session/terminal the deck is currently following, + how many are live.
 const Name = infoAction(`${P}.name`, (s) =>
@@ -170,7 +173,7 @@ const Scroll = defineAction({
 definePlugin({
   uuid: P,
   actions: [
-    Model, Context, Status, Name, Session, Lines,
+    Model, Context, Status, Name, Mode, Session, Lines,
     Allow, AlwaysAllow, Reject,
     Interrupt, Approve, Deny, Plan, Slash, Scroll,
   ],

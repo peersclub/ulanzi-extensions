@@ -45,6 +45,7 @@ if (status === "permission") {
   const cmd = String(ti.command || ti.file_path || ti.path || ti.url || "").slice(0, 60);
   const ask = { type: "permission", tool, cmd, ts: Date.now() };
   const patch = { status: "awaiting_input", ask };
+  if (j?.permission_mode) patch.mode = j.permission_mode;
   if (j?.cwd) patch.name = sessionName(j.cwd, sid);
   try { if (sid) await writeSession(sid, patch, { bumpActive: true }); } catch {}
   process.exit(0);
@@ -61,6 +62,7 @@ const patch = { status };
 const tool = j?.tool_name || j?.tool?.name;
 if (status === "tool" && tool) patch.lastTool = tool;
 if (CLEARS_ASK.has(status)) patch.ask = null;
+if (j?.permission_mode) patch.mode = j.permission_mode; // why this session does/doesn't prompt
 if (j?.cwd) patch.name = sessionName(j.cwd, sid);
 
 try {

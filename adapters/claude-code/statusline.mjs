@@ -33,6 +33,7 @@ else {
 }
 
 const patch = { model, cwd, linesChanged, name: sessionName(cwd, j?.session_id) };
+if (j?.permission_mode) patch.mode = j.permission_mode;
 if (sessionSecs != null) patch.sessionSecs = sessionSecs;
 if (costSession != null) patch.costSession = costSession;
 if (contextPct != null) patch.contextPct = contextPct;

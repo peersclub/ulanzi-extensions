@@ -67,6 +67,15 @@
       "PropertyInspectorPath": "property-inspector/inspector.html"
     },
     {
+      "Name": "Permission Mode",
+      "Tooltip": "Whether this session auto-approves (AUTO/BYPASS) or asks (ASK) — why it does/doesn't prompt",
+      "Icon": "resources/info.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.mode",
+      "States": [{ "Image": "resources/info.png" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
+    },
+    {
       "Name": "Session Name",
       "Tooltip": "Which terminal/session the deck is following (+ live count)",
       "Icon": "resources/info.png",

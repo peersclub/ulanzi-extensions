@@ -33,6 +33,8 @@ export const SESSIONS_DIR = join(BROKER_DIR, "sessions");
  * @property {number}  [sessionSecs]   Session duration in seconds.
  * @property {number}  [linesChanged]  Net lines added+removed this session.
  * @property {string}  [lastTool]      Most recent tool invoked, e.g. "Edit".
+ * @property {'default'|'acceptEdits'|'plan'|'bypassPermissions'|string} [mode]
+ *                                     Permission mode of the session (why it does/doesn't prompt).
  * @property {string}  [cwd]           Working directory of the session.
  * @property {string}  [note]          Free-form short text for a tile.
  * @property {{type:'permission', tool?:string, cmd?:string, ts?:number}|null} [ask]

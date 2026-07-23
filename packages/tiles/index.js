@@ -25,6 +25,7 @@ export const palette = {
   warn: "#e3b341",
   crit: "#f85149",
   info: "#58a6ff",
+  plan: "#a371f7",
 };
 
 /** Map a broker SessionStatus to a color + short glyph label. */
@@ -192,6 +193,29 @@ export function NameTile({ name, sub, accent = palette.accent, dim }) {
       label({ x: SIZE / 2, y: 56, size: 24, text: "SESSION", weight: 700, fill: palette.dim }) +
       label({ x: SIZE / 2, y: 120, size: fitSize(short, 50), text: short, weight: 800, fill: dim ? palette.dim : palette.text }) +
       (sub ? label({ x: SIZE / 2, y: 164, size: fitSize(sub, 24), text: ellipsize(sub, 20), fill: palette.dim }) : "")
+  );
+}
+
+/** Permission mode → label + color, so it's obvious why a session does/doesn't prompt. */
+export const modeStyle = {
+  default: { label: "ASK", color: palette.info, hint: "prompts you" },
+  acceptEdits: { label: "AUTO EDIT", color: palette.warn, hint: "auto-accepts edits" },
+  plan: { label: "PLAN", color: palette.plan, hint: "planning only" },
+  bypassPermissions: { label: "BYPASS", color: palette.crit, hint: "skips all prompts" },
+};
+
+/**
+ * Mode tile: the session's permission mode, color-coded. Amber/red = auto (won't
+ * prompt), blue = asks. Answers "why isn't it asking me?" at a glance.
+ * @param {{mode?: string}} o
+ */
+export function ModeTile({ mode }) {
+  const s = modeStyle[mode] || { label: mode ? String(mode).toUpperCase() : "—", color: palette.dim, hint: "" };
+  return doc(
+    stripe(s.color) +
+      label({ x: SIZE / 2, y: 52, size: 26, text: "MODE", weight: 700, fill: palette.dim }) +
+      label({ x: SIZE / 2, y: 116, size: fitSize(s.label, 52), text: s.label, weight: 800, fill: s.color }) +
+      (s.hint ? label({ x: SIZE / 2, y: 162, size: fitSize(s.hint, 22), text: s.hint, fill: palette.dim }) : "")
   );
 }
 

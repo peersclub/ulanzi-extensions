@@ -15,6 +15,7 @@ export interface AiState {
   sessionSecs?: number;
   linesChanged?: number;
   lastTool?: string;
+  mode?: "default" | "acceptEdits" | "plan" | "bypassPermissions" | string;
   cwd?: string;
   note?: string;
   ask?: { type: "permission"; tool?: string; cmd?: string; ts?: number } | null;
