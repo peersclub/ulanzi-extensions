@@ -18,6 +18,11 @@ tags: [roadmap]
 2. `install.mjs --apply`; run a Claude Code session and watch the tiles.
 3. **Calibrate [[Hotkeys & Control|hotkeys]]** — the one real unknown.
 
+## Vision
+
+- [[Dynamic & Engaging Deck]] — phase-reactive control surface, plan-mode
+  dial-through, animated tiles, clipboard macros.
+
 ## Next 🔜
 
 - Resolve `contextPct` source (transcript token count or newer statusline field).

@@ -46,6 +46,7 @@ deck into a power-user control surface for AI coding tools, starting with Claude
 
 ### Roadmap & reference
 - [[Roadmap & Phases]] · [[Open Questions]]
+- [[Dynamic & Engaging Deck]] — phase-reactive vision + plan-mode showpiece
 - [[Ecosystem Survey]] — what's already installed (narlei plugins, etc.)
 - [[Glossary]]
 
