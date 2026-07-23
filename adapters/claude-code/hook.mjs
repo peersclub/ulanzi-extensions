@@ -81,6 +81,7 @@ const patch = { status };
 const tool = j?.tool_name || j?.tool?.name;
 if (status === "tool" && tool) patch.lastTool = tool;
 if (CLEARS_ASK.has(status)) { patch.ask = null; patch.plan = null; } // moved on -> drop pending ask/plan
+if (status === "done") patch.finishedTs = Date.now(); // fleet slots: green "unread" until viewed
 if (j?.permission_mode) patch.mode = j.permission_mode; // why this session does/doesn't prompt
 if (j?.cwd) patch.name = sessionName(j.cwd, sid);
 

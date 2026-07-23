@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { KpiTile, StatusDot, GaugeTile, SparkTile, ActionTile, NameTile, ModeTile, PlanHeroTile, PlanStepTile } from "./index.js";
+import { KpiTile, StatusDot, GaugeTile, SparkTile, ActionTile, NameTile, ModeTile, PlanHeroTile, PlanStepTile, SlotTile, palette } from "./index.js";
 
 function decode(dataUrl) {
   const m = /^data:image\/svg\+xml;base64,(.+)$/.exec(dataUrl);
@@ -49,6 +49,22 @@ test("KpiTile shrinks long values so they fit the key (no overflow-clipping)", (
   assert.ok(fontOf(decode(KpiTile({ title: "M", value: "3" }))) >= 50);
 });
 
+test("SlotTile maps status to the Codex-Micro color scheme", () => {
+  const bgOf = (o) => {
+    const svg = decode(SlotTile(o));
+    return (svg.match(/<rect width="200" height="200" rx="24" fill="([^"]+)"/) || [])[1];
+  };
+  assert.equal(bgOf({ name: "x", status: "error" }), palette.crit, "error -> red");
+  assert.equal(bgOf({ name: "x", status: "awaiting_input" }), palette.warn, "needs input -> amber");
+  assert.equal(bgOf({ name: "x", status: "done", unread: true }), palette.good, "unread -> green");
+  assert.equal(bgOf({ name: "x", status: "thinking" }), palette.info, "working -> blue");
+  assert.equal(bgOf({ name: "x", status: "done", unread: false }), palette.track, "read/idle -> dim");
+  assert.equal(bgOf({ empty: true }), palette.bg, "empty slot -> bg");
+  // error outranks unread
+  assert.equal(bgOf({ name: "x", status: "error", unread: true }), palette.crit, "error beats unread");
+  assert.match(decode(SlotTile({ slot: 3, name: "api", pinned: true })), /📌/);
+});
+
 test("PlanHeroTile shows step count; PlanStepTile shows position", () => {
   assert.match(decode(PlanHeroTile({ steps: ["a", "b", "c"] })), /PLAN READY/);
   assert.match(decode(PlanHeroTile({ steps: ["a", "b", "c"] })), />3</);
@@ -75,6 +91,7 @@ test("no tile emits an 8-digit hex color (QSvg incompatible)", () => {
     ModeTile({ mode: "acceptEdits" }),
     PlanHeroTile({ steps: ["a", "b", "c"] }),
     PlanStepTile({ index: 0, total: 3, text: "do the first thing carefully" }),
+    SlotTile({ slot: 1, name: "api", status: "thinking", pinned: true }),
   ].map(decode);
   for (const svg of tiles) {
     assert.equal(/#[0-9a-fA-F]{8}\b/.test(svg), false, "8-digit hex found: " + svg.slice(0, 80));

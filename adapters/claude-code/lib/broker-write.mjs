@@ -46,6 +46,8 @@ export async function writeSession(sessionId, patch, opts = {}) {
     sessionId,
     // Only a real interaction sets activeTs; never-interacted sessions stay at 0.
     activeTs: opts.bumpActive ? t : cur.activeTs ?? 0,
+    // First-ever write; never moves (stable fleet-slot ordering).
+    startedTs: cur.startedTs ?? t,
   }));
 }
 

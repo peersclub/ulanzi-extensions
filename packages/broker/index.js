@@ -44,6 +44,9 @@ export const SESSIONS_DIR = join(BROKER_DIR, "sessions");
  * @property {string}  [name]          Human label for the session (project/terminal).
  * @property {string}  [sessionId]     Owning session id (multi-session files).
  * @property {number}  [activeTs]      Unix ms of last user interaction (current-session pick).
+ * @property {number}  [startedTs]     Unix ms of the session's first write (stable slot order).
+ * @property {number}  [finishedTs]    Unix ms of the last turn-finish (Stop) — drives "unread".
+ * @property {number}  [viewedTs]      Unix ms the user last viewed/pinned this session on the deck.
  * @property {number}  [ts]            Unix ms timestamp of last write (staleness).
  */
 
@@ -173,6 +176,8 @@ export async function writeSession(app, sessionId, patch, opts = {}) {
   // that has never been interacted with stays at 0 so background writes can
   // never rank it above a session you actually prompted.
   next.activeTs = opts.bumpActive ? t : cur.activeTs ?? 0;
+  // startedTs = first-ever write; never moves. Gives fleet slots a stable order.
+  next.startedTs = cur.startedTs ?? t;
   const tmp = f + ".tmp";
   await fs.writeFile(tmp, JSON.stringify(next));
   await fs.rename(tmp, f);
@@ -252,9 +257,55 @@ export function watchSessions(_app, onChange) {
   };
 }
 
+// --- Pinning (fleet view) ---------------------------------------------------
+// A pin overrides follow-the-interaction: the deck stays on the pinned session
+// until unpinned (or the session dies). Stored per-app in one small file.
+
+const PIN_FILE = join(BROKER_DIR, "pins.json");
+
+function readPins() {
+  try { return JSON.parse(readFileSync(PIN_FILE, "utf8")); } catch { return {}; }
+}
+
+/** Pin the deck to a session (press a slot key). */
+export async function setPin(app, sessionId) {
+  await fs.mkdir(BROKER_DIR, { recursive: true });
+  const pins = readPins();
+  pins[app] = { sessionId, ts: Date.now() };
+  const tmp = PIN_FILE + ".tmp";
+  await fs.writeFile(tmp, JSON.stringify(pins));
+  await fs.rename(tmp, PIN_FILE);
+}
+
+/** @returns {{sessionId:string, ts:number}|null} */
+export function getPin(app) {
+  return readPins()[app] || null;
+}
+
+export async function clearPin(app) {
+  const pins = readPins();
+  if (!(app in pins)) return;
+  delete pins[app];
+  const tmp = PIN_FILE + ".tmp";
+  await fs.writeFile(tmp, JSON.stringify(pins));
+  await fs.rename(tmp, PIN_FILE);
+}
+
 /**
- * The session the deck should display: the most-recently-interacted one.
- * Adds `stale`, `sessionCount`, and `liveCount` for tile rendering.
+ * Live sessions in stable slot order (by startedTs asc) — slot N shows the Nth.
+ * @param {string} app
+ * @param {{now?: () => number}} [opts]
+ */
+export function liveSessions(app, opts = {}) {
+  const now = opts.now || Date.now;
+  return listSessions(app)
+    .filter((s) => now() - (s.ts || 0) < SESSION_LIVE_MS)
+    .sort((a, b) => (a.startedTs || 0) - (b.startedTs || 0));
+}
+
+/**
+ * The session the deck should display: the pinned one (if still live), else the
+ * most-recently-interacted. Adds `stale`, `pinned`, `sessionCount`, `liveCount`.
  * @param {string} app
  * @param {{now?: () => number}} [opts]
  */
@@ -262,9 +313,13 @@ export function currentSession(app, opts = {}) {
   const now = opts.now || Date.now;
   const all = listSessions(app);
   if (!all.length) return null;
-  const top = all[0];
+  const pin = getPin(app);
+  const pinnedLive =
+    pin && all.find((s) => s.sessionId === pin.sessionId && now() - (s.ts || 0) < SESSION_LIVE_MS);
+  const top = pinnedLive || all[0];
   return {
     ...top,
+    pinned: !!pinnedLive,
     stale: typeof top.ts === "number" && now() - top.ts > STALE_MS,
     sessionCount: all.length,
     liveCount: all.filter((s) => now() - (s.ts || 0) < SESSION_LIVE_MS).length,

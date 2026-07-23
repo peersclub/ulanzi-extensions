@@ -217,6 +217,32 @@
       "Controllers": ["Keypad"]
     },
     {
+      "Name": "Session Slot",
+      "Tooltip": "Fleet view: one live session per key, color-coded (blue working, amber needs you, green unread, red error). Press to pin the deck to it; press again to unpin. Set the slot number in settings.",
+      "Icon": "resources/info.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.slot",
+      "States": [{ "Image": "resources/info.png" }],
+      "Controllers": ["Keypad"]
+    },
+    {
+      "Name": "Fleet Dial",
+      "Tooltip": "Rotate through live sessions; press to pin/unpin the previewed one",
+      "Icon": "resources/dial.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.fleetdial",
+      "States": [{ "Image": "resources/dial.png" }],
+      "Controllers": ["Encoder"]
+    },
+    {
+      "Name": "Macro",
+      "Tooltip": "Send a configurable command (e.g. /compact) to the focused terminal via clipboard paste",
+      "Icon": "resources/control.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.macro",
+      "States": [{ "Image": "resources/control.png" }],
+      "Controllers": ["Keypad"]
+    },
+    {
       "Name": "Plan: Approve",
       "Tooltip": "Contextual: approve the presented plan (dim when none)",
       "Icon": "resources/control.png",

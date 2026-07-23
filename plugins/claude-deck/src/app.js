@@ -11,9 +11,13 @@
  * Live state comes from adapters/claude-code writing the broker; usage/cost are
  * intentionally NOT here (the narlei plugins own those on adjacent keys).
  */
+import { execFile } from "node:child_process";
 import { definePlugin, defineAction } from "@ulanzi-lab/runtime";
-import { readState, currentSession, watchSessions } from "@ulanzi-lab/broker";
-import { KpiTile, GaugeTile, StatusDot, ActionTile, NameTile, ModeTile, PlanHeroTile, PlanStepTile, palette } from "@ulanzi-lab/tiles";
+import {
+  readState, currentSession, watchSessions,
+  liveSessions, setPin, getPin, clearPin, writeSession,
+} from "@ulanzi-lab/broker";
+import { KpiTile, GaugeTile, StatusDot, ActionTile, NameTile, ModeTile, PlanHeroTile, PlanStepTile, SlotTile, palette } from "@ulanzi-lab/tiles";
 
 const APP = "claude-code";
 const P = "com.ulanzi.ulanzideck.claudedeck";
@@ -89,7 +93,7 @@ const Mode = infoAction(`${P}.mode`, (s) => ModeTile({ mode: s.mode }));
 // The session/terminal the deck is currently following, + how many are live.
 const Name = infoAction(`${P}.name`, (s) =>
   NameTile({
-    name: s.name || "—",
+    name: (s.pinned ? "📌" : "") + (s.name || "—"),
     sub: s.liveCount > 1 ? `${s.liveCount} live` : s.status || "",
     dim: s.stale,
   })
@@ -208,6 +212,113 @@ const PlanScroll = defineAction({
   },
 });
 
+// --- Fleet view (Codex-Micro-style): one key per live session -----------------
+
+/** Unread = the session finished after you last viewed/interacted with it. */
+const isUnread = (s) => (s.finishedTs || 0) > Math.max(s.viewedTs || 0, s.activeTs || 0);
+
+/**
+ * Session Slot key: shows the Nth live session as a full-color status light
+ * (blue working, amber needs-you, green unread, red error, dim idle/empty).
+ * Press → pin the deck to it (+ mark viewed). Press again → unpin.
+ * Slot number comes from Property Inspector settings (default 1).
+ */
+const Slot = defineAction({
+  uuid: `${P}.slot`,
+  active(b) {
+    const app = b.settings.app || APP;
+    const draw = () => {
+      const n = Math.max(1, parseInt(b.settings.slot, 10) || 1);
+      const s = liveSessions(app)[n - 1];
+      b.state.sid = s?.sessionId;
+      if (!s) { b.setIcon(SlotTile({ slot: n, empty: true })); return; }
+      const pinned = getPin(app)?.sessionId === s.sessionId;
+      b.setIcon(SlotTile({ slot: n, name: s.name, status: s.status, unread: isUnread(s), pinned }));
+    };
+    b.state.draw = draw;
+    draw();
+    b.addCleanup(watchSessions(app, draw));
+    b.every(STALENESS_MS, draw, { leading: false });
+  },
+  async run(b) {
+    const app = b.settings.app || APP;
+    const sid = b.state.sid;
+    if (!sid) { b.toast("Empty slot"); return; }
+    if (getPin(app)?.sessionId === sid) {
+      await clearPin(app);
+      b.toast("Unpinned — following your input again");
+    } else {
+      await setPin(app, sid);
+      b.toast("Deck pinned to this session");
+    }
+    // Mark viewed (clears green "unread"); this write also wakes every watcher,
+    // so all tiles — including other slots' pin markers — redraw immediately.
+    await writeSession(app, sid, { viewedTs: Date.now() });
+    b.state.draw?.();
+  },
+});
+
+/** Fleet Dial: rotate to preview each live session; press to pin/unpin it. */
+const FleetDial = defineAction({
+  uuid: `${P}.fleetdial`,
+  active(b) {
+    const app = b.settings.app || APP;
+    b.state.i = 0;
+    const draw = () => {
+      const live = liveSessions(app);
+      if (!live.length) { b.setIcon(SlotTile({ empty: true })); b.state.sid = null; return; }
+      b.state.i = Math.max(0, Math.min(b.state.i, live.length - 1));
+      const s = live[b.state.i];
+      b.state.sid = s.sessionId;
+      const pinned = getPin(app)?.sessionId === s.sessionId;
+      b.setIcon(SlotTile({ slot: b.state.i + 1, name: s.name, status: s.status, unread: isUnread(s), pinned }));
+    };
+    b.state.draw = draw;
+    draw();
+    b.addCleanup(watchSessions(app, draw));
+    b.every(STALENESS_MS, draw, { leading: false });
+  },
+  dial(b, ticks) {
+    b.state.i = (b.state.i || 0) + (ticks < 0 ? -1 : 1);
+    b.state.draw?.();
+  },
+  async dialDown(b) {
+    const app = b.settings.app || APP;
+    const sid = b.state.sid;
+    if (!sid) return;
+    if (getPin(app)?.sessionId === sid) await clearPin(app);
+    else { await setPin(app, sid); await writeSession(app, sid, { viewedTs: Date.now() }); }
+    b.state.draw?.();
+  },
+});
+
+/**
+ * Macro key: inject a full command into the focused terminal via clipboard
+ * paste — pbcopy, then ⌘V (documented Mac modifier format), then enter. All
+ * keystrokes PI-overridable (`keylist`, space-separated) for calibration.
+ */
+const Macro = defineAction({
+  uuid: `${P}.macro`,
+  active(b) {
+    const cmd = b.settings.command || "/compact";
+    b.setIcon(ActionTile({ glyph: "⌘", caption: cmd.slice(0, 12), accent: palette.plan }));
+  },
+  settings(b) {
+    const cmd = b.settings.command || "/compact";
+    b.setIcon(ActionTile({ glyph: "⌘", caption: cmd.slice(0, 12), accent: palette.plan }));
+  },
+  run(b) {
+    const cmd = b.settings.command || "/compact";
+    const p = execFile("pbcopy");
+    p.stdin.end(cmd);
+    p.on("close", () => {
+      const keys = (b.settings.keylist || "⌘V enter").trim().split(/\s+/);
+      keys.forEach((k, i) => setTimeout(() => b.hotkey(k), 120 + i * 120));
+    });
+    b.toast(`Sent ${cmd}`);
+  },
+});
+
 /** Encoder: rotate to scroll the transcript, press to jump to bottom. */
 const Scroll = defineAction({
   uuid: `${P}.scroll`,
@@ -231,6 +342,7 @@ definePlugin({
     Model, Context, Status, Name, Mode, Session, Lines,
     Allow, AlwaysAllow, Reject,
     PlanApprove, PlanReject, PlanHero, PlanScroll,
+    Slot, FleetDial, Macro,
     Interrupt, Approve, Deny, Plan, Slash, Scroll,
   ],
 }).start();

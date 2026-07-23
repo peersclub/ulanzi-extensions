@@ -23,12 +23,16 @@ export interface AiState {
   name?: string;
   sessionId?: string;
   activeTs?: number;
+  startedTs?: number;
+  finishedTs?: number;
+  viewedTs?: number;
   ts?: number;
 }
 
 export interface CurrentSession extends AiState {
   sessionId: string;
   stale: boolean;
+  pinned: boolean;
   sessionCount: number;
   liveCount: number;
 }
@@ -64,6 +68,14 @@ export function writeSession(
 export function listSessions(app: string): Array<AiState & { sessionId: string }>;
 
 export function watchSessions(app: string, onChange: () => void): () => void;
+
+export function setPin(app: string, sessionId: string): Promise<void>;
+export function getPin(app: string): { sessionId: string; ts: number } | null;
+export function clearPin(app: string): Promise<void>;
+export function liveSessions(
+  app: string,
+  opts?: { now?: () => number }
+): Array<AiState & { sessionId: string }>;
 
 export function currentSession(
   app: string,

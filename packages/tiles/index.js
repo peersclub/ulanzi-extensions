@@ -209,6 +209,38 @@ export function NameTile({ name, sub, accent = palette.accent, dim }) {
 }
 
 /**
+ * Slot tile: one live session on one key, Codex-Micro style — the whole key is
+ * a colored "frosted" status light with the session name on it.
+ * Color priority: error (red) > needs input/ask (amber) > unread result (green)
+ * > working (blue) > idle/read (dim). Press behavior lives in the deck action.
+ * @param {{slot?:number, name?:string, status?:string, unread?:boolean, pinned?:boolean, empty?:boolean}} o
+ */
+export function SlotTile({ slot, name, status, unread, pinned, empty }) {
+  let bg = palette.bg;
+  let word = "empty";
+  if (!empty) {
+    if (status === "error") { bg = palette.crit; word = "error"; }
+    else if (status === "awaiting_input") { bg = palette.warn; word = "needs you"; }
+    else if (unread) { bg = palette.good; word = "unread"; }
+    else if (status === "thinking" || status === "tool") { bg = palette.info; word = "working"; }
+    else { bg = palette.track; word = status || "idle"; }
+  }
+  const lit = !empty && bg !== palette.track && bg !== palette.bg;
+  const chip =
+    slot != null
+      ? `<rect x="10" y="10" width="34" height="30" rx="8" fill="rgba(0,0,0,0.35)"/>` +
+        label({ x: 27, y: 32, size: 20, text: String(slot), weight: 800 })
+      : "";
+  const disp = ellipsize((pinned ? "📌" : "") + (empty ? "—" : name || "?"), 14);
+  return doc(
+    chip +
+      label({ x: SIZE / 2, y: 112, size: fitSize(disp, 40), text: disp, weight: 800, fill: empty ? palette.dim : palette.text }) +
+      label({ x: SIZE / 2, y: 168, size: fitSize(word.toUpperCase(), 24), text: word.toUpperCase(), weight: 700, fill: lit ? "rgba(0,0,0,0.55)" : palette.dim }),
+    bg
+  );
+}
+
+/**
  * Plan hero tile: "PLAN READY" + step count, shown when Claude presents a plan.
  * @param {{steps?: string[], dim?: boolean}} o
  */
