@@ -121,14 +121,26 @@ export function KpiTile({ title, value, sub, accent = palette.accent }) {
 
 /**
  * Status dot: a large colored ring with glyph + label. Driven by SessionStatus.
- * @param {{status: keyof typeof statusStyle, sub?: string, stale?: boolean}} o
+ * Pass `frame` (a monotonically increasing integer) to animate the ring as a
+ * rotating spinner — used for the "working" states so the deck feels alive.
+ * QSvg-safe: a stroked circle with stroke-dasharray + a rotate transform.
+ * @param {{status: keyof typeof statusStyle, sub?: string, stale?: boolean, frame?: number}} o
  */
-export function StatusDot({ status, sub, stale }) {
+export function StatusDot({ status, sub, stale, frame }) {
   const s = statusStyle[status] || statusStyle.idle;
   const color = stale ? palette.dim : s.color;
   const cx = SIZE / 2;
+  const cy = 86;
+  const r = 46;
+  const ring =
+    frame == null
+      ? `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="10"/>`
+      : // spinner: faint track + a rotating ~90° arc
+        `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${palette.track}" stroke-width="10"/>` +
+        `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round" ` +
+        `stroke-dasharray="72 217" transform="rotate(${(frame * 45) % 360} ${cx} ${cy})"/>`;
   return doc(
-    `<circle cx="${cx}" cy="86" r="46" fill="none" stroke="${color}" stroke-width="10"/>` +
+    ring +
       label({ x: cx, y: 104, size: 52, text: s.glyph, weight: 800, fill: color }) +
       label({ x: cx, y: 168, size: fitSize(sub ?? s.label, 28), text: ellipsize(sub ?? s.label, 16), weight: 700, fill: stale ? palette.dim : palette.text })
   );

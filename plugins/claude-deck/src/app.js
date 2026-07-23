@@ -20,6 +20,8 @@ const P = "com.ulanzi.ulanzideck.claudedeck";
 // Heartbeat only refreshes time-based staleness; live switches come from the
 // filesystem watch below (near-instant), not this tick.
 const STALENESS_MS = 3000;
+// Animation frame rate for the "working" status spinner (~6fps).
+const ANIM_MS = 160;
 
 const mmss = (/** @type {number} */ s) => {
   if (!s || s < 0) return "0:00";
@@ -59,11 +61,27 @@ const Context = infoAction(`${P}.context`, (s) =>
   GaugeTile({ label: "Context", pct: s.contextPct ?? 0 })
 );
 
-// Status subtitle shows WHICH session the light belongs to — key when several
-// terminals are running, so a green "done" is unambiguous.
-const Status = infoAction(`${P}.status`, (s) =>
-  StatusDot({ status: (s.stale ? "idle" : s.status) || "idle", stale: s.stale, sub: s.name })
-);
+// Status: animated spinner while working. Subtitle shows WHICH session the light
+// belongs to. State is cached (refreshed on watch + heartbeat); the fast ANIM tick
+// only re-renders the cached state with an advancing frame while thinking/tool —
+// so the deck feels alive without hammering the filesystem.
+const Status = defineAction({
+  uuid: `${P}.status`,
+  active(b) {
+    const app = b.settings.app || APP;
+    let frame = 0;
+    let state = {};
+    const st = () => (state.stale ? "idle" : state.status || "idle");
+    const animating = () => st() === "thinking" || st() === "tool";
+    const render = () =>
+      b.setIcon(StatusDot({ status: st(), sub: state.name, stale: state.stale, frame: animating() ? frame : undefined }));
+    const refresh = () => { state = currentSession(app) || readState(app) || {}; render(); };
+    refresh();
+    b.addCleanup(watchSessions(app, refresh));               // instant on state change
+    b.every(STALENESS_MS, refresh, { leading: false });      // staleness decay
+    b.every(ANIM_MS, () => { if (animating()) { frame++; render(); } }, { leading: false }); // spin
+  },
+});
 
 // Permission mode of the current session — why it does/doesn't prompt you.
 const Mode = infoAction(`${P}.mode`, (s) => ModeTile({ mode: s.mode }));
