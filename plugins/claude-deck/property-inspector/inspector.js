@@ -23,14 +23,14 @@ const fields = ["keylist", "command", "keylistUp", "keylistDown", "app"];
 const key = uuid.split(".").pop();
 const DEFAULTS = {
   interrupt: { keylist: "escape" },
-  approve: { keylist: "enter" },
-  deny: { keylist: "escape" },
+  approve: { keylist: "y" },
+  deny: { keylist: "n" },
   plan: { keylist: "shift+tab" },
   slash: { command: "/compact" },
   scroll: { keylistUp: "up", keylistDown: "down" },
-  allow: { keylist: "enter" },
+  allow: { keylist: "y" },
   alwaysallow: { keylist: "down enter" },
-  reject: { keylist: "escape" },
+  reject: { keylist: "n" },
 }[key] || {};
 
 // Fill any still-empty field with its default, then persist once so the value

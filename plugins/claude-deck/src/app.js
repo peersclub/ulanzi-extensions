@@ -105,8 +105,8 @@ function controlAction(uuid, glyph, caption, defaultKey) {
 }
 
 const Interrupt = controlAction(`${P}.interrupt`, "⎋", "Interrupt", "escape");
-const Approve = controlAction(`${P}.approve`, "✓", "Approve", "enter");
-const Deny = controlAction(`${P}.deny`, "✕", "Deny", "escape");
+const Approve = controlAction(`${P}.approve`, "✓", "Approve", "y");
+const Deny = controlAction(`${P}.deny`, "✕", "Deny", "n");
 const Plan = controlAction(`${P}.plan`, "⇧", "Plan", "shift+tab");
 const Slash = controlAction(`${P}.slash`, "/", "Command", "");
 
@@ -144,9 +144,11 @@ function permAction(uuid, label, glyph, accent, defaultKeys) {
   });
 }
 
-const Allow = permAction(`${P}.allow`, "Allow", "✓", palette.good, "enter");
+// Defaults use plain letters (y/n) — the permission prompt accepts them and they
+// avoid the undocumented special-key tokens, so they're the best first hotkey test.
+const Allow = permAction(`${P}.allow`, "Allow", "✓", palette.good, "y");
 const AlwaysAllow = permAction(`${P}.alwaysallow`, "Always", "✓✓", palette.info, "down enter");
-const Reject = permAction(`${P}.reject`, "Deny", "✕", palette.crit, "escape");
+const Reject = permAction(`${P}.reject`, "Deny", "✕", palette.crit, "n");
 
 /** Encoder: rotate to scroll the transcript, press to jump to bottom. */
 const Scroll = defineAction({
