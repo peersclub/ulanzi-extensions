@@ -36,6 +36,7 @@ deck into a power-user control surface for AI coding tools, starting with Claude
 
 ### Plugins
 - [[Claude Deck]] — the flagship (live session activity + control)
+- [[Fleet Deck]] — Codex-Micro-style: one key per live session, press to pin
 - [[Plugin Catalog & Ideas]] — future extensions
 
 ### Adapters & data
