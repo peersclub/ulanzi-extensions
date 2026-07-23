@@ -217,6 +217,41 @@
       "Controllers": ["Keypad"]
     },
     {
+      "Name": "Plan: Approve",
+      "Tooltip": "Contextual: approve the presented plan (dim when none)",
+      "Icon": "resources/control.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.planapprove",
+      "States": [{ "Image": "resources/control.png" }],
+      "Controllers": ["Keypad"]
+    },
+    {
+      "Name": "Plan: Keep Planning",
+      "Tooltip": "Contextual: reject the plan and keep planning (dim when none)",
+      "Icon": "resources/control.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.planreject",
+      "States": [{ "Image": "resources/control.png" }],
+      "Controllers": ["Keypad"]
+    },
+    {
+      "Name": "Plan: Ready",
+      "Tooltip": "Shows PLAN READY + step count when Claude presents a plan",
+      "Icon": "resources/info.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.planhero",
+      "States": [{ "Image": "resources/info.png" }],
+      "Controllers": ["Keypad"]
+    },
+    {
+      "Name": "Plan: Dial Through",
+      "Tooltip": "Rotate to step through the plan; press to jump to the first step",
+      "Icon": "resources/dial.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.planscroll",
+      "States": [{ "Image": "resources/dial.png" }],
+      "Controllers": ["Encoder"]
+    },
+    {
       "Name": "Transcript Scroll",
       "Tooltip": "Scroll the terminal/transcript with the dial",
       "Icon": "resources/dial.png",

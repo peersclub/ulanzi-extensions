@@ -18,7 +18,8 @@ export interface AiState {
   mode?: "default" | "acceptEdits" | "plan" | "bypassPermissions" | string;
   cwd?: string;
   note?: string;
-  ask?: { type: "permission"; tool?: string; cmd?: string; ts?: number } | null;
+  ask?: { type: "permission" | "plan"; tool?: string; cmd?: string; ts?: number } | null;
+  plan?: { steps: string[]; raw: string; ts: number } | null;
   name?: string;
   sessionId?: string;
   activeTs?: number;

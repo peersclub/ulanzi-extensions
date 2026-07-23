@@ -11,4 +11,6 @@ export function GaugeTile(o: { label: string; pct: number; accent?: string; sub?
 export function SparkTile(o: { label: string; values: number[]; accent?: string; value?: string | number }): string;
 export function NameTile(o: { name: string; sub?: string; accent?: string; dim?: boolean }): string;
 export function ModeTile(o: { mode?: string }): string;
+export function PlanHeroTile(o: { steps?: string[]; dim?: boolean }): string;
+export function PlanStepTile(o: { index?: number; total?: number; text?: string }): string;
 export function ActionTile(o: { glyph: string; caption: string; accent?: string; sub?: string; dim?: boolean }): string;

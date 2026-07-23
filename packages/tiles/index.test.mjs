@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { KpiTile, StatusDot, GaugeTile, SparkTile, ActionTile, NameTile } from "./index.js";
+import { KpiTile, StatusDot, GaugeTile, SparkTile, ActionTile, NameTile, ModeTile, PlanHeroTile, PlanStepTile } from "./index.js";
 
 function decode(dataUrl) {
   const m = /^data:image\/svg\+xml;base64,(.+)$/.exec(dataUrl);
@@ -49,6 +49,12 @@ test("KpiTile shrinks long values so they fit the key (no overflow-clipping)", (
   assert.ok(fontOf(decode(KpiTile({ title: "M", value: "3" }))) >= 50);
 });
 
+test("PlanHeroTile shows step count; PlanStepTile shows position", () => {
+  assert.match(decode(PlanHeroTile({ steps: ["a", "b", "c"] })), /PLAN READY/);
+  assert.match(decode(PlanHeroTile({ steps: ["a", "b", "c"] })), />3</);
+  assert.match(decode(PlanStepTile({ index: 1, total: 4, text: "second step" })), /STEP 2\/4/);
+});
+
 test("NameTile truncates long names and renders", () => {
   const svg = decode(NameTile({ name: "a-very-long-project-name", sub: "2 live" }));
   assert.match(svg, /…/);
@@ -66,6 +72,9 @@ test("no tile emits an 8-digit hex color (QSvg incompatible)", () => {
     SparkTile({ label: "t", values: [1, 2, 3], value: 3 }),
     ActionTile({ glyph: "X", caption: "go" }),
     NameTile({ name: "proj", sub: "1 live" }),
+    ModeTile({ mode: "acceptEdits" }),
+    PlanHeroTile({ steps: ["a", "b", "c"] }),
+    PlanStepTile({ index: 0, total: 3, text: "do the first thing carefully" }),
   ].map(decode);
   for (const svg of tiles) {
     assert.equal(/#[0-9a-fA-F]{8}\b/.test(svg), false, "8-digit hex found: " + svg.slice(0, 80));

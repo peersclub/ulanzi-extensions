@@ -13,7 +13,7 @@
  */
 import { definePlugin, defineAction } from "@ulanzi-lab/runtime";
 import { readState, currentSession, watchSessions } from "@ulanzi-lab/broker";
-import { KpiTile, GaugeTile, StatusDot, ActionTile, NameTile, ModeTile, palette } from "@ulanzi-lab/tiles";
+import { KpiTile, GaugeTile, StatusDot, ActionTile, NameTile, ModeTile, PlanHeroTile, PlanStepTile, palette } from "@ulanzi-lab/tiles";
 
 const APP = "claude-code";
 const P = "com.ulanzi.ulanzideck.claudedeck";
@@ -139,26 +139,26 @@ const Slash = controlAction(`${P}.slash`, "/", "Command", "");
  * being asked (PermissionRequest bumps activeTs), so it tracks the right terminal.
  * @param {string} uuid @param {string} label @param {string} glyph
  * @param {string} accent @param {string} defaultKeys
+ * @param {'permission'|'plan'} [askType] which ask arms this key (default permission)
  */
-function permAction(uuid, label, glyph, accent, defaultKeys) {
+function permAction(uuid, label, glyph, accent, defaultKeys, askType = "permission") {
   return defineAction({
     uuid,
     active(b) {
       const app = b.settings.app || APP;
       const draw = () => {
         const s = currentSession(app) || {};
-        const ask = s.ask && s.ask.type === "permission" && !s.stale ? s.ask : null;
+        const ask = s.ask && s.ask.type === askType && !s.stale ? s.ask : null;
         b.state.armed = !!ask;
-        b.setIcon(
-          ActionTile({ glyph, caption: label, accent, sub: ask ? ask.tool : "", dim: !ask })
-        );
+        const sub = ask ? (askType === "plan" ? `${(s.plan?.steps || []).length} steps` : ask.tool) : "";
+        b.setIcon(ActionTile({ glyph, caption: label, accent, sub, dim: !ask }));
       };
       draw();
       b.addCleanup(watchSessions(app, draw));
       b.every(STALENESS_MS, draw, { leading: false });
     },
     run(b) {
-      if (!b.state.armed) { b.toast(`No prompt to ${label.toLowerCase()}`); return; }
+      if (!b.state.armed) { b.toast(`No ${askType} to ${label.toLowerCase()}`); return; }
       const keys = (b.settings.keylist || defaultKeys).trim().split(/\s+/);
       keys.forEach((k, i) => { if (k) setTimeout(() => b.hotkey(k), i * 80); });
     },
@@ -170,6 +170,43 @@ function permAction(uuid, label, glyph, accent, defaultKeys) {
 const Allow = permAction(`${P}.allow`, "Allow", "✓", palette.good, "y");
 const AlwaysAllow = permAction(`${P}.alwaysallow`, "Always", "✓✓", palette.info, "down enter");
 const Reject = permAction(`${P}.reject`, "Deny", "✕", palette.crit, "n");
+
+// --- Plan mode: contextual keys armed when a plan is presented (ask.type "plan") ---
+const PlanApprove = permAction(`${P}.planapprove`, "Approve", "✓", palette.good, "y", "plan");
+const PlanReject = permAction(`${P}.planreject`, "Keep Planning", "↻", palette.warn, "n", "plan");
+
+// Plan hero: "PLAN READY · N steps" for the current session (dim when none).
+const PlanHero = infoAction(`${P}.planhero`, (s) =>
+  PlanHeroTile({ steps: s.plan && !s.stale ? s.plan.steps : [], dim: s.stale })
+);
+
+// Encoder: dial through the plan's steps; press to jump back to the first.
+const PlanScroll = defineAction({
+  uuid: `${P}.planscroll`,
+  active(b) {
+    const app = b.settings.app || APP;
+    b.state.i = 0;
+    const draw = () => {
+      const s = currentSession(app) || {};
+      const steps = s.plan && !s.stale ? s.plan.steps : [];
+      if (!steps.length) { b.setIcon(PlanHeroTile({ steps: [], dim: true })); return; }
+      b.state.i = Math.max(0, Math.min(b.state.i, steps.length - 1));
+      b.setIcon(PlanStepTile({ index: b.state.i, total: steps.length, text: steps[b.state.i] }));
+    };
+    b.state.draw = draw;
+    draw();
+    b.addCleanup(watchSessions(app, draw));
+    b.every(STALENESS_MS, draw, { leading: false });
+  },
+  dial(b, ticks) {
+    b.state.i = (b.state.i || 0) + (ticks < 0 ? -1 : 1);
+    b.state.draw?.();
+  },
+  dialDown(b) {
+    b.state.i = 0;
+    b.state.draw?.();
+  },
+});
 
 /** Encoder: rotate to scroll the transcript, press to jump to bottom. */
 const Scroll = defineAction({
@@ -193,6 +230,7 @@ definePlugin({
   actions: [
     Model, Context, Status, Name, Mode, Session, Lines,
     Allow, AlwaysAllow, Reject,
+    PlanApprove, PlanReject, PlanHero, PlanScroll,
     Interrupt, Approve, Deny, Plan, Slash, Scroll,
   ],
 }).start();

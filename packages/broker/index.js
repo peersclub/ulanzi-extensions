@@ -37,8 +37,10 @@ export const SESSIONS_DIR = join(BROKER_DIR, "sessions");
  *                                     Permission mode of the session (why it does/doesn't prompt).
  * @property {string}  [cwd]           Working directory of the session.
  * @property {string}  [note]          Free-form short text for a tile.
- * @property {{type:'permission', tool?:string, cmd?:string, ts?:number}|null} [ask]
+ * @property {{type:'permission'|'plan', tool?:string, cmd?:string, ts?:number}|null} [ask]
  *                                     What Claude is currently asking (drives contextual keys).
+ * @property {{steps:string[], raw:string, ts:number}|null} [plan]
+ *                                     Parsed plan (from ExitPlanMode) for the dial-through-plan.
  * @property {string}  [name]          Human label for the session (project/terminal).
  * @property {string}  [sessionId]     Owning session id (multi-session files).
  * @property {number}  [activeTs]      Unix ms of last user interaction (current-session pick).

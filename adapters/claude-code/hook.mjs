@@ -13,11 +13,30 @@
 // sentinel prompt. On UserPromptSubmit we detect it, persist the name override
 // for THIS session_id (only the hook has it), switch the deck to it, and BLOCK
 // the prompt so the model never sees the sentinel.
-import { write, writeSession, readStdinJson, sessionName, setNameOverride } from "./lib/broker-write.mjs";
+import { write, writeSession, readStdinJson, sessionName, setNameOverride, parsePlanSteps } from "./lib/broker-write.mjs";
 
 const status = process.argv[2] || "idle";
 const j = await readStdinJson();
 const sid = j?.session_id;
+
+// --- plan ready (ExitPlanMode) ---
+// Claude presented a plan for approval. Fires as both PreToolUse ('tool') and
+// PermissionRequest ('permission'); handle both here so neither clears it.
+// Records the parsed plan + a plan-type ask so the deck lights up Approve/
+// Keep-Planning and the dial-through-plan. MUST NOT emit a decision (exit 0).
+if (j?.tool_name === "ExitPlanMode" && (status === "tool" || status === "permission")) {
+  const raw = String(j?.tool_input?.plan || "");
+  const steps = parsePlanSteps(raw);
+  const patch = {
+    status: "awaiting_input",
+    ask: { type: "plan", tool: "ExitPlanMode", cmd: steps[0] || "", ts: Date.now() },
+    plan: { steps, raw: raw.slice(0, 8000), ts: Date.now() },
+  };
+  if (j?.permission_mode) patch.mode = j.permission_mode;
+  if (j?.cwd) patch.name = sessionName(j.cwd, sid);
+  try { if (sid) await writeSession(sid, patch, { bumpActive: true }); } catch {}
+  process.exit(0);
+}
 
 // --- /session rename interceptor (UserPromptSubmit only carries a prompt) ---
 const SENTINEL = /^\s*\[\[ulanzi-session\]\]\s+(.+?)\s*$/;
@@ -61,7 +80,7 @@ const CLEARS_ASK = new Set(["thinking", "tool", "done", "idle"]);
 const patch = { status };
 const tool = j?.tool_name || j?.tool?.name;
 if (status === "tool" && tool) patch.lastTool = tool;
-if (CLEARS_ASK.has(status)) patch.ask = null;
+if (CLEARS_ASK.has(status)) { patch.ask = null; patch.plan = null; } // moved on -> drop pending ask/plan
 if (j?.permission_mode) patch.mode = j.permission_mode; // why this session does/doesn't prompt
 if (j?.cwd) patch.name = sessionName(j.cwd, sid);
 

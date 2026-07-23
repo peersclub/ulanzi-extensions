@@ -49,6 +49,36 @@ export async function writeSession(sessionId, patch, opts = {}) {
   }));
 }
 
+/**
+ * Parse an ExitPlanMode plan (markdown) into short step titles for the deck's
+ * dial-through-plan. Prefers numbered items, then headings, then bullets;
+ * falls back to non-empty lines. Strips markdown so titles fit a key.
+ * @param {string} md
+ * @returns {string[]}
+ */
+export function parsePlanSteps(md) {
+  const clean = (s) =>
+    String(s)
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1") // links -> text
+      .replace(/[*_`#>]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  const lines = String(md || "").split("\n");
+  const numbered = [];
+  const headings = [];
+  const bullets = [];
+  for (const raw of lines) {
+    const line = raw.trim();
+    let m;
+    if ((m = /^\**\s*(\d+)[.)]\s+(.+)/.exec(line))) numbered.push(clean(m[2]));
+    else if ((m = /^#{1,4}\s+(.+)/.exec(line))) headings.push(clean(m[1]));
+    else if ((m = /^[-*]\s+(.+)/.exec(line))) bullets.push(clean(m[1]));
+  }
+  let steps = numbered.length ? numbered : headings.length ? headings : bullets;
+  if (!steps.length) steps = lines.map(clean).filter(Boolean);
+  return steps.filter(Boolean).slice(0, 30);
+}
+
 /** Read stdin JSON (statusline/hook payload). */
 export async function readStdinJson() {
   const chunks = [];

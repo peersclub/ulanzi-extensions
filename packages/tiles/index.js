@@ -208,9 +208,51 @@ export function NameTile({ name, sub, accent = palette.accent, dim }) {
   );
 }
 
+/**
+ * Plan hero tile: "PLAN READY" + step count, shown when Claude presents a plan.
+ * @param {{steps?: string[], dim?: boolean}} o
+ */
+export function PlanHeroTile({ steps, dim }) {
+  const n = Array.isArray(steps) ? steps.length : 0;
+  const color = dim || !n ? palette.dim : palette.plan;
+  return doc(
+    stripe(color) +
+      label({ x: SIZE / 2, y: 66, size: 30, text: n ? "PLAN READY" : "PLAN", weight: 800, fill: color }) +
+      label({ x: SIZE / 2, y: 128, size: 66, text: n ? String(n) : "—", weight: 800 }) +
+      (n ? label({ x: SIZE / 2, y: 168, size: 24, text: n === 1 ? "step" : "steps", fill: palette.dim }) : "")
+  );
+}
+
+/**
+ * Plan step tile: one step of the plan, for the encoder dial-through.
+ * @param {{index?: number, total?: number, text?: string}} o
+ */
+export function PlanStepTile({ index = 0, total = 0, text = "" }) {
+  const words = String(text).split(" ");
+  // wrap the step text across up to 3 lines that each fit the key
+  const lines = [];
+  let cur = "";
+  for (const w of words) {
+    if ((cur + " " + w).trim().length > 16 && cur) { lines.push(cur); cur = w; }
+    else cur = (cur + " " + w).trim();
+    if (lines.length === 3) break;
+  }
+  if (cur && lines.length < 3) lines.push(cur);
+  const body = lines
+    .slice(0, 3)
+    .map((ln, i) => label({ x: SIZE / 2, y: 96 + i * 30, size: 24, text: ellipsize(ln, 18), weight: 600 }))
+    .join("");
+  return doc(
+    stripe(palette.plan) +
+      label({ x: SIZE / 2, y: 52, size: 26, text: `STEP ${index + 1}/${total}`, weight: 700, fill: palette.plan }) +
+      body
+  );
+}
+
 /** Permission mode → label + color, so it's obvious why a session does/doesn't prompt. */
 export const modeStyle = {
   default: { label: "ASK", color: palette.info, hint: "prompts you" },
+  auto: { label: "AUTO", color: palette.warn, hint: "auto-accepting" },
   acceptEdits: { label: "AUTO EDIT", color: palette.warn, hint: "auto-accepts edits" },
   plan: { label: "PLAN", color: palette.plan, hint: "planning only" },
   bypassPermissions: { label: "BYPASS", color: palette.crit, hint: "skips all prompts" },

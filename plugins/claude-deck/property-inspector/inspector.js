@@ -11,7 +11,7 @@ let lastSent = null;
 const uuid = Utils.getQueryParams("uuid") || "";
 const isSlash = uuid.endsWith(".slash");
 const isScroll = uuid.endsWith(".scroll");
-const INFO = ["model", "context", "status", "name", "mode", "session", "lines"];
+const INFO = ["model", "context", "status", "name", "mode", "session", "lines", "planhero"];
 const isInfo = INFO.some((s) => uuid.endsWith("." + s));
 
 const el = (id) => document.getElementById(id);
@@ -31,6 +31,8 @@ const DEFAULTS = {
   allow: { keylist: "y" },
   alwaysallow: { keylist: "down enter" },
   reject: { keylist: "n" },
+  planapprove: { keylist: "y" },
+  planreject: { keylist: "n" },
 }[key] || {};
 
 // Fill any still-empty field with its default, then persist once so the value
