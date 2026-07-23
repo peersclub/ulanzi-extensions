@@ -213,9 +213,11 @@ export function NameTile({ name, sub, accent = palette.accent, dim }) {
  * a colored "frosted" status light with the session name on it.
  * Color priority: error (red) > needs input/ask (amber) > unread result (green)
  * > working (blue) > idle/read (dim). Press behavior lives in the deck action.
- * @param {{slot?:number, name?:string, status?:string, unread?:boolean, pinned?:boolean, empty?:boolean}} o
+ * `flash` (with an alternating frame) dims the background every other frame —
+ * the attention pulse for a background session that needs you.
+ * @param {{slot?:number, name?:string, status?:string, unread?:boolean, pinned?:boolean, empty?:boolean, flash?:boolean}} o
  */
-export function SlotTile({ slot, name, status, unread, pinned, empty }) {
+export function SlotTile({ slot, name, status, unread, pinned, empty, flash }) {
   let bg = palette.bg;
   let word = "empty";
   if (!empty) {
@@ -225,6 +227,9 @@ export function SlotTile({ slot, name, status, unread, pinned, empty }) {
     else if (status === "thinking" || status === "tool") { bg = palette.info; word = "working"; }
     else { bg = palette.track; word = status || "idle"; }
   }
+  // Pulse: darken the lit color on alternate frames (QSvg-safe, plain hex swap).
+  const DIMMED = { [palette.warn]: "#6e5619", [palette.crit]: "#7a2622", [palette.good]: "#1e5c2a", [palette.info]: "#274f75" };
+  if (flash && DIMMED[bg]) bg = DIMMED[bg];
   const lit = !empty && bg !== palette.track && bg !== palette.bg;
   const chip =
     slot != null

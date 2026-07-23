@@ -60,6 +60,8 @@ export default class UlanziApi {
   toast(msg: string): void;
   showAlert(context: Context): void;
   openUrl(url: string, local?: boolean, param?: unknown): void;
+  /** Open a popup webview on a local page. */
+  openView(url: string, width?: number, height?: number, x?: number, y?: number, param?: unknown): void;
   logMessage(msg: string, level?: string): void;
 
   // --- settings ---

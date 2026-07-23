@@ -65,6 +65,24 @@ test("SlotTile maps status to the Codex-Micro color scheme", () => {
   assert.match(decode(SlotTile({ slot: 3, name: "api", pinned: true })), /📌/);
 });
 
+test("gif encoder produces valid animated GIF89a", async () => {
+  const { spinnerGif, pulseGif } = await import("./gif.js");
+  for (const buf of [spinnerGif("#58a6ff"), pulseGif("#e3b341")]) {
+    assert.equal(buf.slice(0, 6).toString(), "GIF89a", "header");
+    assert.equal(buf[buf.length - 1], 0x3b, "trailer");
+    let frames = 0;
+    for (let i = 0; i < buf.length - 1; i++) if (buf[i] === 0x21 && buf[i + 1] === 0xf9) frames++;
+    assert.ok(frames >= 10, "has animation frames");
+  }
+});
+
+test("SlotTile flash produces a different (dimmed) background", () => {
+  const bgOf = (o) => (decode(SlotTile(o)).match(/<rect width="200" height="200" rx="24" fill="([^"]+)"/) || [])[1];
+  const lit = bgOf({ name: "x", status: "awaiting_input" });
+  const dim = bgOf({ name: "x", status: "awaiting_input", flash: true });
+  assert.notEqual(lit, dim, "flash frame alternates the color");
+});
+
 test("PlanHeroTile shows step count; PlanStepTile shows position", () => {
   assert.match(decode(PlanHeroTile({ steps: ["a", "b", "c"] })), /PLAN READY/);
   assert.match(decode(PlanHeroTile({ steps: ["a", "b", "c"] })), />3</);

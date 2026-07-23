@@ -12,7 +12,12 @@
  * intentionally NOT here (the narlei plugins own those on adjacent keys).
  */
 import { execFile } from "node:child_process";
+import { readFileSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { definePlugin, defineAction } from "@ulanzi-lab/runtime";
+import { spinnerGif, pulseGif, gifDataUrl } from "@ulanzi-lab/tiles/gif.js";
+import { writeDashboard, DASH_PATH } from "./dashboard.js";
 import {
   readState, currentSession, watchSessions,
   liveSessions, setPin, getPin, clearPin, writeSession,
@@ -141,6 +146,17 @@ const Tokens = infoAction(`${P}.tokens`, (s) =>
     sub: s.tokensWindow ? `of ${fmtTok(s.tokensWindow)}` : "",
   })
 );
+
+// Cost burn sparkline from the same rolling history (cost series).
+const CostTrend = infoAction(`${P}.costtrend`, (s) => {
+  const pts = (s.hist || []).map((h) => h.cost).filter((v) => typeof v === "number");
+  return SparkTile({
+    label: "Burn",
+    values: pts.length ? pts : [0, 0],
+    value: fmtCost(s.costSession),
+    accent: (s.costSession ?? 0) >= 10 ? palette.crit : (s.costSession ?? 0) >= 3 ? palette.warn : palette.good,
+  });
+});
 
 // Context trend sparkline from the session's rolling history.
 const Trend = infoAction(`${P}.trend`, (s) => {
@@ -272,18 +288,26 @@ const Slot = defineAction({
   uuid: `${P}.slot`,
   active(b) {
     const app = b.settings.app || APP;
+    let frame = 0;
     const draw = () => {
       const n = Math.max(1, parseInt(b.settings.slot, 10) || 1);
       const s = liveSessions(app)[n - 1];
       b.state.sid = s?.sessionId;
-      if (!s) { b.setIcon(SlotTile({ slot: n, empty: true })); return; }
+      if (!s) { b.state.pulse = false; b.setIcon(SlotTile({ slot: n, empty: true })); return; }
       const pinned = getPin(app)?.sessionId === s.sessionId;
-      b.setIcon(SlotTile({ slot: n, name: s.name, status: s.status, unread: isUnread(s), pinned }));
+      const current = currentSession(app)?.sessionId === s.sessionId;
+      // Attention pulse: this session needs you and you're NOT already on it.
+      b.state.pulse = s.status === "awaiting_input" && !current;
+      b.setIcon(SlotTile({
+        slot: n, name: s.name, status: s.status, unread: isUnread(s), pinned,
+        flash: b.state.pulse && frame % 2 === 1,
+      }));
     };
     b.state.draw = draw;
     draw();
     b.addCleanup(watchSessions(app, draw));
     b.every(STALENESS_MS, draw, { leading: false });
+    b.every(500, () => { if (b.state.pulse) { frame++; draw(); } }, { leading: false });
   },
   async run(b) {
     const app = b.settings.app || APP;
@@ -364,6 +388,108 @@ const Macro = defineAction({
   },
 });
 
+// --- Dashboard, Beacon, Effort dial -------------------------------------------
+
+/**
+ * Dashboard key: keeps ~/.ulanzi-ai/dashboard.html fresh (rewritten on every
+ * broker change while the key is visible; the page self-reloads every 2s), and
+ * opens it in a popup webview on press.
+ */
+const Dashboard = defineAction({
+  uuid: `${P}.dashboard`,
+  active(b) {
+    const app = b.settings.app || APP;
+    const regen = () => writeDashboard(liveSessions(app), currentSession(app));
+    b.setIcon(ActionTile({ glyph: "▦", caption: "Dashboard", accent: palette.info }));
+    regen();
+    b.addCleanup(watchSessions(app, regen));
+    b.every(STALENESS_MS, regen, { leading: false });
+  },
+  run(b) {
+    b.$UD.openView(DASH_PATH, 760, 540);
+  },
+});
+
+/**
+ * Beacon key: a natively-animated GIF face (no per-frame traffic).
+ *   amber pulse  = some session needs your input
+ *   blue spinner = the current session is working
+ *   green pulse  = a finished session is unread
+ *   dim          = all quiet
+ * GIFs are generated once at startup; we only re-send when the state changes.
+ */
+const GIF_FACES = {
+  attention: gifDataUrl(pulseGif(palette.warn)),
+  working: gifDataUrl(spinnerGif(palette.info)),
+  unread: gifDataUrl(pulseGif(palette.good)),
+};
+const Beacon = defineAction({
+  uuid: `${P}.beacon`,
+  active(b) {
+    const app = b.settings.app || APP;
+    const draw = () => {
+      const live = liveSessions(app);
+      const cur = currentSession(app);
+      let face = "quiet";
+      if (live.some((s) => s.status === "awaiting_input")) face = "attention";
+      else if (cur && !cur.stale && (cur.status === "thinking" || cur.status === "tool")) face = "working";
+      else if (live.some((s) => isUnread(s))) face = "unread";
+      if (face === b.state.face) return; // GIFs are big — only send on change
+      b.state.face = face;
+      if (face === "quiet") b.setIcon(ActionTile({ glyph: "◉", caption: "Fleet", accent: palette.dim }));
+      else b.$UD.setGifDataIcon(b.context, GIF_FACES[face]);
+    };
+    draw();
+    b.addCleanup(watchSessions(app, draw));
+    b.every(STALENESS_MS, draw, { leading: false });
+  },
+});
+
+/**
+ * Effort dial: rotate to choose a reasoning level, press to apply. Applies by
+ * writing `effortLevel` to ~/.claude/settings.json — Claude Code live-reloads
+ * it (verified), so no keystroke injection and no terminal focus needed.
+ * "auto" removes the key (back to model default).
+ */
+const EFFORT_LEVELS = ["low", "medium", "high", "xhigh", "auto"];
+const EffortDial = defineAction({
+  uuid: `${P}.effortdial`,
+  active(b) {
+    const app = b.settings.app || APP;
+    b.state.i = 2; // start at "high"
+    const draw = () => {
+      const s = currentSession(app) || {};
+      const sel = EFFORT_LEVELS[b.state.i];
+      b.setIcon(KpiTile({
+        title: "Effort",
+        value: sel.toUpperCase(),
+        sub: s.effort ? `now: ${s.effort}` : "press to apply",
+        accent: palette.plan,
+      }));
+    };
+    b.state.draw = draw;
+    draw();
+    b.addCleanup(watchSessions(app, draw));
+  },
+  dial(b, ticks) {
+    b.state.i = (b.state.i + (ticks < 0 ? -1 : 1) + EFFORT_LEVELS.length) % EFFORT_LEVELS.length;
+    b.state.draw?.();
+  },
+  dialDown(b) {
+    const sel = EFFORT_LEVELS[b.state.i];
+    const file = join(homedir(), ".claude", "settings.json");
+    try {
+      const s = JSON.parse(readFileSync(file, "utf8"));
+      if (sel === "auto") delete s.effortLevel;
+      else s.effortLevel = sel;
+      writeFileSync(file, JSON.stringify(s, null, 2));
+      b.toast(`Effort → ${sel} (next turn)`);
+    } catch {
+      b.toast("Could not update settings.json");
+    }
+  },
+});
+
 /** Encoder: rotate to scroll the transcript, press to jump to bottom. */
 const Scroll = defineAction({
   uuid: `${P}.scroll`,
@@ -384,7 +510,8 @@ const Scroll = defineAction({
 definePlugin({
   uuid: P,
   actions: [
-    Model, Context, Status, Name, Mode, Session, Lines, Cost, Tokens, Trend,
+    Model, Context, Status, Name, Mode, Session, Lines, Cost, Tokens, Trend, CostTrend,
+    Dashboard, Beacon, EffortDial,
     Allow, AlwaysAllow, Reject,
     PlanApprove, PlanReject, PlanHero, PlanScroll,
     Slot, FleetDial, Macro,

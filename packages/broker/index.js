@@ -39,6 +39,7 @@ export const SESSIONS_DIR = join(BROKER_DIR, "sessions");
  * @property {string}  [lastTool]      Most recent tool invoked, e.g. "Edit".
  * @property {'default'|'acceptEdits'|'plan'|'bypassPermissions'|string} [mode]
  *                                     Permission mode of the session (why it does/doesn't prompt).
+ * @property {string}  [effort]        Reasoning effort level (low/medium/high/xhigh/max).
  * @property {string}  [cwd]           Working directory of the session.
  * @property {string}  [note]          Free-form short text for a tile.
  * @property {{type:'permission'|'plan', tool?:string, cmd?:string, ts?:number}|null} [ask]

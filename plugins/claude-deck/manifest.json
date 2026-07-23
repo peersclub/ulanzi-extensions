@@ -244,6 +244,41 @@
       "PropertyInspectorPath": "property-inspector/inspector.html"
     },
     {
+      "Name": "Cost Trend",
+      "Tooltip": "Sparkline of session cost over time (burn rate)",
+      "Icon": "resources/info.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.costtrend",
+      "States": [{ "Image": "resources/info.png" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
+    },
+    {
+      "Name": "Dashboard",
+      "Tooltip": "Press to open a live popup dashboard of all sessions (status, mode, effort, tokens, cost, pending plan)",
+      "Icon": "resources/info.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.dashboard",
+      "States": [{ "Image": "resources/info.png" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
+    },
+    {
+      "Name": "Fleet Beacon",
+      "Tooltip": "Natively-animated status light: amber pulse = a session needs you, blue spin = working, green pulse = unread result",
+      "Icon": "resources/info.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.beacon",
+      "States": [{ "Image": "resources/info.png" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
+    },
+    {
+      "Name": "Effort Dial",
+      "Tooltip": "Rotate to choose reasoning effort (low→xhigh, auto); press to apply via settings.json (live-reloaded, next turn)",
+      "Icon": "resources/dial.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.effortdial",
+      "States": [{ "Image": "resources/dial.png" }],
+      "Controllers": ["Encoder"]
+    },
+    {
       "Name": "Session Slot",
       "Tooltip": "Fleet view: one live session per key, color-coded (blue working, amber needs you, green unread, red error). Press to pin the deck to it; press again to unpin. Set the slot number in settings.",
       "Icon": "resources/info.png",
