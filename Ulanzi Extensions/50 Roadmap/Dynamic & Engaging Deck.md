@@ -33,6 +33,14 @@ thinking, Approve while asked, Approve-Plan when a plan lands). Generalizes the
 | executing | Interrupt + progress | green, moving |
 | done | cost/lines summary + what-next | green, celebratory |
 
+> [!success] Plan mode — BUILT (2026-07-23)
+> Detection + Approve/Keep-Planning keys + dial-through-plan shipped and verified.
+> Confirmed on the real `ExitPlanMode` payload: `tool_input.plan` = plan markdown
+> (fires as PreToolUse + PermissionRequest); `permission_mode` → `"auto"` after
+> approval. Parser (`parsePlanSteps`) extracts step titles. On-device: place
+> **Plan: Ready / Approve / Keep Planning / Dial Through**; keystroke calibration
+> for approve/reject pending (defaults `y`/`n`).
+
 ## Showpiece: Plan mode
 
 Signals are ideal:
