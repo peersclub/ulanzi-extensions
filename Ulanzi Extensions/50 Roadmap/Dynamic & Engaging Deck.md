@@ -60,6 +60,16 @@ The plan-ready transform:
 > [[Multi-Session & Naming]]/PermissionRequest) to confirm `tool_input.plan`
 > carries the text on this Claude Code version.
 
+> [!success] Engagement toolkit — BUILT (2026-07-23)
+> All five shipped: **attention pulse** on [[Fleet Deck]] slots (bg-alternating
+> flash when a background session needs you), **Cost Trend** burn sparkline,
+> **Dashboard** key (plugin-rendered live HTML for all sessions via `openView`,
+> self-reloading), **Fleet Beacon** (pure-JS GIF89a encoder → natively-animated
+> key via `setGifDataIcon`: amber pulse/blue spin/green unread), and the
+> **Effort Dial** (rotate low→xhigh/auto; press writes live-reloaded
+> `effortLevel` into settings.json — verified, no keystrokes; `/effort <level>`
+> also exists). Adapter now records per-session `effort`.
+
 ## Engagement toolkit
 
 - **Animated tiles** — redraw the status tile ~5fps with a phase counter →
