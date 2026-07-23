@@ -32,6 +32,23 @@ function dbg(...a) {
   } catch {}
 }
 
+// Press journal: ALWAYS on (presses are rare, unlike renders). One line per
+// physical interaction — the ground truth for "which key did the user press?".
+// Enables interactive click-and-confirm verification and post-hoc debugging.
+import { statSync, writeFileSync } from "node:fs";
+const JOURNAL_FILE = join(homedir(), ".ulanzi-ai", "press-journal.log");
+function journal(kind, actionUuid, extra = "") {
+  try {
+    mkdirSync(join(homedir(), ".ulanzi-ai"), { recursive: true });
+    appendFileSync(JOURNAL_FILE, `${new Date().toISOString()} ${kind} ${actionUuid}${extra ? " " + extra : ""}\n`);
+  } catch {}
+}
+function rotateJournal() {
+  try {
+    if (statSync(JOURNAL_FILE).size > 256 * 1024) writeFileSync(JOURNAL_FILE, "");
+  } catch {}
+}
+
 /**
  * A live button instance (one per placed key = one `context`). Handlers get this
  * as their sole argument; per-instance scratch lives on `.state`.
@@ -219,10 +236,31 @@ export function definePlugin(cfg) {
         }
       });
 
-      $UD.onRun((d) => defFor(d.context).def?.run?.(ensure(d.context)));
-      $UD.onKeyDown?.((d) => defFor(d.context).def?.run?.(ensure(d.context)));
-      $UD.onDialRotate?.((d) => defFor(d.context).def?.dial?.(ensure(d.context), d.ticks ?? 0));
-      $UD.onDialDown?.((d) => defFor(d.context).def?.dialDown?.(ensure(d.context)));
+      // One physical press arrives as BOTH `run` and `keydown` (observed on the
+      // D200X: duplicate hotkey sends in the same millisecond). Route both
+      // through a per-context guard so an action's run() fires exactly once —
+      // critical for toggles like pin/unpin.
+      rotateJournal();
+      const lastRun = new Map();
+      const fireRun = (d) => {
+        const t = Date.now();
+        if (t - (lastRun.get(d.context) || 0) < 150) return;
+        lastRun.set(d.context, t);
+        const { uuid } = defFor(d.context);
+        journal("press", uuid);
+        dbg("press", uuid);
+        defFor(d.context).def?.run?.(ensure(d.context));
+      };
+      $UD.onRun(fireRun);
+      $UD.onKeyDown?.(fireRun);
+      $UD.onDialRotate?.((d) => {
+        journal("dial", defFor(d.context).uuid, `ticks=${d.ticks ?? 0}`);
+        defFor(d.context).def?.dial?.(ensure(d.context), d.ticks ?? 0);
+      });
+      $UD.onDialDown?.((d) => {
+        journal("dial-press", defFor(d.context).uuid);
+        defFor(d.context).def?.dialDown?.(ensure(d.context));
+      });
 
       $UD.onClear((d) => {
         const params = /** @type {any} */ (d).param;

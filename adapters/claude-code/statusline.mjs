@@ -21,27 +21,40 @@ const costSession = typeof cost.total_cost_usd === "number" ? cost.total_cost_us
 
 // Context %: prefer the official statusline field (`context_window.used_percentage`),
 // fall back to older field names, then compute from the transcript token usage.
+// The transcript read also yields the RAW token counts for the Tokens tile.
 let contextPct;
+let tokensUsed;
+let tokensWindow;
 const cw = j?.context_window || {};
 const ctx = j?.context || j?.token_usage || {};
+const fromTranscript = await contextFromTranscript(j?.transcript_path);
+if (fromTranscript) {
+  tokensUsed = fromTranscript.usedTokens;
+  tokensWindow = fromTranscript.windowTokens;
+}
 if (typeof cw.used_percentage === "number") contextPct = Math.round(cw.used_percentage);
 else if (typeof ctx.used_pct === "number") contextPct = ctx.used_pct;
 else if (typeof ctx.percent === "number") contextPct = ctx.percent;
-else {
-  const fromTranscript = await contextFromTranscript(j?.transcript_path);
-  if (fromTranscript) contextPct = fromTranscript.pct;
-}
+else if (fromTranscript) contextPct = fromTranscript.pct;
 
 const patch = { model, cwd, linesChanged, name: sessionName(cwd, j?.session_id) };
 if (j?.permission_mode) patch.mode = j.permission_mode;
 if (sessionSecs != null) patch.sessionSecs = sessionSecs;
 if (costSession != null) patch.costSession = costSession;
 if (contextPct != null) patch.contextPct = contextPct;
+if (tokensUsed != null) { patch.tokensUsed = tokensUsed; patch.tokensWindow = tokensWindow; }
 
 try {
   // Statusline fires on render, not on interaction → never bump activeTs here.
-  if (j?.session_id) await writeSession(j.session_id, patch, { bumpActive: false });
-  else await write(patch); // no session id: fall back to the legacy single file
+  // histSample: rolling per-session history (context% / cost) for trend tiles.
+  if (j?.session_id) {
+    await writeSession(j.session_id, patch, {
+      bumpActive: false,
+      histSample: contextPct != null || costSession != null
+        ? { t: Date.now(), pct: contextPct ?? null, cost: costSession ?? null }
+        : undefined,
+    });
+  } else await write(patch); // no session id: fall back to the legacy single file
 } catch {
   /* never let broker IO break the user's statusline */
 }

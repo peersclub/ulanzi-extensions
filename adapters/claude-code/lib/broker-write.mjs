@@ -33,11 +33,16 @@ export async function write(patch) {
   return atomicMerge(LEGACY_FILE, patch, () => ({}));
 }
 
+/** Max rolling-history samples kept per session (drives trend sparklines). */
+const HIST_MAX = 30;
+
 /**
  * Write one session's state.
  * @param {string} sessionId
  * @param {object} patch
- * @param {{bumpActive?: boolean}} [opts] bumpActive advances `activeTs` (interaction).
+ * @param {{bumpActive?: boolean, histSample?: object}} [opts]
+ *   bumpActive advances `activeTs` (interaction); histSample appends one sample
+ *   to the session's rolling `hist` array (capped at HIST_MAX).
  */
 export async function writeSession(sessionId, patch, opts = {}) {
   const file = join(SESSIONS_DIR, `${APP}__${sanitizeId(sessionId)}.json`);
@@ -48,6 +53,9 @@ export async function writeSession(sessionId, patch, opts = {}) {
     activeTs: opts.bumpActive ? t : cur.activeTs ?? 0,
     // First-ever write; never moves (stable fleet-slot ordering).
     startedTs: cur.startedTs ?? t,
+    ...(opts.histSample
+      ? { hist: [...(cur.hist || []).slice(-(HIST_MAX - 1)), opts.histSample] }
+      : {}),
   }));
 }
 

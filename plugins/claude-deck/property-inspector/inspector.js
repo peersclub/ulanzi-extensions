@@ -13,7 +13,7 @@ const isSlash = uuid.endsWith(".slash");
 const isScroll = uuid.endsWith(".scroll");
 const isSlot = uuid.endsWith(".slot");
 const isMacro = uuid.endsWith(".macro");
-const INFO = ["model", "context", "status", "name", "mode", "session", "lines", "planhero"];
+const INFO = ["model", "context", "status", "name", "mode", "session", "lines", "planhero", "cost", "tokens", "trend"];
 const isInfo = INFO.some((s) => uuid.endsWith("." + s));
 
 const el = (id) => document.getElementById(id);

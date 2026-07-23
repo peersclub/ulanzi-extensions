@@ -11,7 +11,10 @@ export interface AiState {
   model?: string;
   status?: SessionStatus;
   contextPct?: number;
+  tokensUsed?: number;
+  tokensWindow?: number;
   costSession?: number;
+  hist?: Array<{ t: number; pct?: number | null; cost?: number | null }>;
   sessionSecs?: number;
   linesChanged?: number;
   lastTool?: string;

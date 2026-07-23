@@ -29,7 +29,11 @@ export const SESSIONS_DIR = join(BROKER_DIR, "sessions");
  * @property {string}  [model]         Short model label, e.g. "sonnet".
  * @property {SessionStatus} [status]  Live activity of the session.
  * @property {number}  [contextPct]    Context window used, 0-100.
+ * @property {number}  [tokensUsed]    Raw context-window tokens in use.
+ * @property {number}  [tokensWindow]  Context-window size in tokens (200k / 1M).
  * @property {number}  [costSession]   USD spent this session.
+ * @property {Array<{t:number, pct?:number|null, cost?:number|null}>} [hist]
+ *                                     Rolling samples (context %, cost) for trend tiles.
  * @property {number}  [sessionSecs]   Session duration in seconds.
  * @property {number}  [linesChanged]  Net lines added+removed this session.
  * @property {string}  [lastTool]      Most recent tool invoked, e.g. "Edit".

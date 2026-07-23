@@ -17,7 +17,7 @@ import {
   readState, currentSession, watchSessions,
   liveSessions, setPin, getPin, clearPin, writeSession,
 } from "@ulanzi-lab/broker";
-import { KpiTile, GaugeTile, StatusDot, ActionTile, NameTile, ModeTile, PlanHeroTile, PlanStepTile, SlotTile, palette } from "@ulanzi-lab/tiles";
+import { KpiTile, GaugeTile, StatusDot, ActionTile, NameTile, ModeTile, PlanHeroTile, PlanStepTile, SlotTile, SparkTile, palette } from "@ulanzi-lab/tiles";
 
 const APP = "claude-code";
 const P = "com.ulanzi.ulanzideck.claudedeck";
@@ -26,6 +26,20 @@ const P = "com.ulanzi.ulanzideck.claudedeck";
 const STALENESS_MS = 3000;
 // Animation frame rate for the "working" status spinner (~6fps).
 const ANIM_MS = 160;
+
+/** 308000 -> "308k", 1000000 -> "1M", 950 -> "950". */
+const fmtTok = (/** @type {number} */ n) => {
+  if (n == null) return "—";
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 ? 1 : 0) + "M";
+  if (n >= 1_000) return Math.round(n / 1_000) + "k";
+  return String(n);
+};
+
+/** 0.4237 -> "$0.42", 12.5 -> "$12.50", 123.4 -> "$123". */
+const fmtCost = (/** @type {number} */ c) => {
+  if (c == null) return "—";
+  return c >= 100 ? "$" + Math.round(c) : "$" + c.toFixed(2);
+};
 
 const mmss = (/** @type {number} */ s) => {
   if (!s || s < 0) return "0:00";
@@ -106,6 +120,37 @@ const Session = infoAction(`${P}.session`, (s) =>
 const Lines = infoAction(`${P}.lines`, (s) => {
   const n = s.linesChanged ?? 0;
   return KpiTile({ title: "Lines", value: n > 0 ? `+${n}` : String(n), accent: palette.good });
+});
+
+// Session cost in USD — live burn for THIS session (account-level daily/weekly
+// spend belongs to the aicost/claudeusage plugins on adjacent keys).
+const Cost = infoAction(`${P}.cost`, (s) =>
+  KpiTile({
+    title: "Cost",
+    value: fmtCost(s.costSession),
+    sub: s.name || "",
+    accent: s.costSession >= 10 ? palette.crit : s.costSession >= 3 ? palette.warn : palette.good,
+  })
+);
+
+// Raw token counter: context-window tokens in use / window size.
+const Tokens = infoAction(`${P}.tokens`, (s) =>
+  KpiTile({
+    title: "Tokens",
+    value: fmtTok(s.tokensUsed),
+    sub: s.tokensWindow ? `of ${fmtTok(s.tokensWindow)}` : "",
+  })
+);
+
+// Context trend sparkline from the session's rolling history.
+const Trend = infoAction(`${P}.trend`, (s) => {
+  const pts = (s.hist || []).map((h) => h.pct).filter((v) => typeof v === "number");
+  return SparkTile({
+    label: "Ctx Trend",
+    values: pts.length ? pts : [0, 0],
+    value: s.contextPct != null ? `${Math.round(s.contextPct)}%` : "—",
+    accent: (s.contextPct ?? 0) >= 90 ? palette.crit : (s.contextPct ?? 0) >= 70 ? palette.warn : palette.accent,
+  });
 });
 
 /**
@@ -339,7 +384,7 @@ const Scroll = defineAction({
 definePlugin({
   uuid: P,
   actions: [
-    Model, Context, Status, Name, Mode, Session, Lines,
+    Model, Context, Status, Name, Mode, Session, Lines, Cost, Tokens, Trend,
     Allow, AlwaysAllow, Reject,
     PlanApprove, PlanReject, PlanHero, PlanScroll,
     Slot, FleetDial, Macro,
