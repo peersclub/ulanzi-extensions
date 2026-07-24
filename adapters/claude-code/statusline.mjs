@@ -5,10 +5,17 @@
 //
 // Wire it in ~/.claude/settings.json:
 //   "statusLine": { "type": "command", "command": "node /ABS/PATH/statusline.mjs" }
+import { execSync } from "node:child_process";
 import { write, writeSession, readStdinJson, sessionName } from "./lib/broker-write.mjs";
 import { contextFromTranscript } from "./lib/context.mjs";
 
 const j = await readStdinJson();
+
+// This process is a child of the Claude session → same controlling terminal.
+// Recording the tty lets the deck match the FOCUSED terminal tab exactly
+// (Claude renames tab titles to topic slugs, so title matching is unreliable).
+let tty = "";
+try { tty = execSync(`ps -o tty= -p ${process.pid}`).toString().trim(); } catch {}
 
 const model = j?.model?.display_name || j?.model?.id || "";
 const cwd = j?.workspace?.current_dir || j?.cwd || "";
@@ -38,6 +45,7 @@ else if (typeof ctx.percent === "number") contextPct = ctx.percent;
 else if (fromTranscript) contextPct = fromTranscript.pct;
 
 const patch = { model, cwd, linesChanged, name: sessionName(cwd, j?.session_id) };
+if (tty && tty !== "??") patch.tty = tty; // e.g. "ttys009"
 if (j?.permission_mode) patch.mode = j.permission_mode;
 if (sessionSecs != null) patch.sessionSecs = sessionSecs;
 if (costSession != null) patch.costSession = costSession;

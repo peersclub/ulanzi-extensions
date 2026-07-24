@@ -20,6 +20,7 @@ export interface AiState {
   lastTool?: string;
   mode?: "default" | "acceptEdits" | "plan" | "bypassPermissions" | string;
   effort?: string;
+  tty?: string;
   cwd?: string;
   note?: string;
   ask?: { type: "permission" | "plan"; tool?: string; cmd?: string; ts?: number } | null;
