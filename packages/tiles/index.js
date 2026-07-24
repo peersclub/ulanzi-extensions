@@ -300,11 +300,11 @@ export function PlanStepTile({ index = 0, total = 0, text = "" }) {
  * around the center). Used for brand faces; the animated variant lives in gif.js.
  * @param {{cx?:number, cy?:number, r?:number, color?:string}} [o]
  */
-export function claudeBurst({ cx = SIZE / 2, cy = SIZE / 2, r = 62, color = palette.accent } = {}) {
+export function claudeBurst({ cx = SIZE / 2, cy = SIZE / 2, r = 62, color = palette.accent, weight = 0.15 } = {}) {
   const rays = [];
   for (let k = 0; k < 12; k++) {
     rays.push(
-      `<rect x="${cx - r * 0.075}" y="${cy - r}" width="${r * 0.15}" height="${r * 0.62}" rx="${r * 0.075}" ` +
+      `<rect x="${cx - (r * weight) / 2}" y="${cy - r}" width="${r * weight}" height="${r * 0.62}" rx="${(r * weight) / 2}" ` +
         `fill="${color}" transform="rotate(${k * 30} ${cx} ${cy})"/>`
     );
   }
@@ -320,9 +320,10 @@ export function claudeBurst({ cx = SIZE / 2, cy = SIZE / 2, r = 62, color = pale
 export function brandize(dataUri, { color = palette.accent } = {}) {
   try {
     const svg = Buffer.from(dataUri.split(",")[1], "base64").toString("utf8");
+    // Big enough to survive the physical LCD's downscale (~14% of the key).
     const badge =
-      `<circle cx="176" cy="24" r="15" fill="rgba(0,0,0,0.45)"/>` +
-      claudeBurst({ cx: 176, cy: 24, r: 12, color });
+      `<circle cx="169" cy="31" r="27" fill="rgba(0,0,0,0.55)"/>` +
+      claudeBurst({ cx: 169, cy: 31, r: 21, color, weight: 0.3 });
     return toDataUrl(svg.replace("</svg>", badge + "</svg>"));
   } catch {
     return dataUri;
