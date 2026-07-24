@@ -18,6 +18,7 @@ import { join } from "node:path";
 import { definePlugin, defineAction } from "@ulanzi-lab/runtime";
 import { spinnerGif, pulseGif, gifDataUrl } from "@ulanzi-lab/tiles/gif.js";
 import { writeDashboard, DASH_PATH } from "./dashboard.js";
+import { startFocusFollower } from "./focus.js";
 import {
   readState, currentSession, watchSessions,
   liveSessions, setPin, getPin, clearPin, writeSession,
@@ -110,13 +111,33 @@ const Status = defineAction({
 const Mode = infoAction(`${P}.mode`, (s) => ModeTile({ mode: s.mode }));
 
 // The session/terminal the deck is currently following, + how many are live.
-const Name = infoAction(`${P}.name`, (s) =>
-  NameTile({
-    name: (s.pinned ? "📌" : "") + (s.name || "—"),
-    sub: s.liveCount > 1 ? `${s.liveCount} live` : s.status || "",
-    dim: s.stale,
-  })
-);
+// Name tile flashes solid orange ("→ SWITCHED") for a beat whenever the deck
+// changes sessions — focus-follow, a prompt elsewhere, or a pin — so switching
+// is visible at a glance.
+const Name = defineAction({
+  uuid: `${P}.name`,
+  active(b) {
+    const app = b.settings.app || APP;
+    let flashUntil = 0;
+    const draw = () => {
+      const s = currentSession(app) || readState(app) || {};
+      if (s.sessionId && b.state.sid && s.sessionId !== b.state.sid) {
+        flashUntil = Date.now() + 900;
+        setTimeout(draw, 950); // schedule the un-flash
+      }
+      b.state.sid = s.sessionId;
+      b.setIcon(NameTile({
+        name: (s.pinned ? "📌" : "") + (s.name || "—"),
+        sub: s.liveCount > 1 ? `${s.liveCount} live` : s.status || "",
+        dim: s.stale,
+        flash: Date.now() < flashUntil,
+      }));
+    };
+    draw();
+    b.addCleanup(watchSessions(app, draw));
+    b.every(STALENESS_MS, draw, { leading: false });
+  },
+});
 
 const Session = infoAction(`${P}.session`, (s) =>
   KpiTile({ title: "Session", value: mmss(s.sessionSecs ?? 0), sub: s.lastTool || "" })
@@ -506,6 +527,10 @@ const Scroll = defineAction({
     b.hotkey(b.settings.keylistBottom || "shift+g");
   },
 });
+
+// Follow the terminal tab you focus (pin still wins). One-time macOS consent
+// ("UlanziDeck wants to control System Events") may appear on first run.
+startFocusFollower(APP);
 
 definePlugin({
   uuid: P,

@@ -196,10 +196,19 @@ export function SparkTile({ label: cap, values, accent = palette.accent, value }
 /**
  * Name tile: which session/terminal the deck is currently following. Font size
  * adapts to length and long names are truncated so they always fit the key.
- * @param {{name:string, sub?:string, accent?:string, dim?:boolean}} o
+ * `flash` inverts the tile (full accent background) — the brief "just switched
+ * sessions" cue so a change is visible across the room.
+ * @param {{name:string, sub?:string, accent?:string, dim?:boolean, flash?:boolean}} o
  */
-export function NameTile({ name, sub, accent = palette.accent, dim }) {
+export function NameTile({ name, sub, accent = palette.accent, dim, flash }) {
   const short = ellipsize(name || "—", 16);
+  if (flash) {
+    return doc(
+      label({ x: SIZE / 2, y: 62, size: 26, text: "→ SWITCHED", weight: 800, fill: "rgba(0,0,0,0.6)" }) +
+        label({ x: SIZE / 2, y: 126, size: fitSize(short, 46), text: short, weight: 800, fill: "#111111" }),
+      accent
+    );
+  }
   return doc(
     stripe(dim ? palette.dim : accent) +
       label({ x: SIZE / 2, y: 56, size: 24, text: "SESSION", weight: 700, fill: palette.dim }) +
