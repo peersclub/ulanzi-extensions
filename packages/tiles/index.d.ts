@@ -13,6 +13,7 @@ export function NameTile(o: { name: string; sub?: string; accent?: string; dim?:
 export function ModeTile(o: { mode?: string }): string;
 export function claudeBurst(o?: { cx?: number; cy?: number; r?: number; color?: string }): string;
 export function BurstTile(o?: { caption?: string; color?: string; dim?: boolean }): string;
+export function brandize(dataUri: string, o?: { color?: string }): string;
 export function SlotTile(o: {
   slot?: number;
   name?: string;

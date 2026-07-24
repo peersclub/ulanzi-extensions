@@ -499,6 +499,20 @@
       "Controllers": [
         "Encoder"
       ]
+    },
+    {
+      "Name": "Claude Logo",
+      "Tooltip": "The Claude mark, alive — a breathing orange starburst. Pure identity, no action.",
+      "Icon": "resources/actions/claudelogo.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.claudelogo",
+      "States": [
+        {
+          "Image": "resources/actions/claudelogo.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
     }
   ]
 }

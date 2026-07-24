@@ -95,6 +95,7 @@ const ICONS = {
   cmddial: { body: cmdIcon("/···"), dial: true },
   dashboard: { body: shapes.grid },
   beacon: { body: shapes.beaconBurst },
+  claudelogo: { body: shapes.deckLogo },
   effortdial: { body: shapes.speedo, dial: true },
   slot: { body: shapes.slot },
   macro: { glyph: ["⌘", C.plan] },

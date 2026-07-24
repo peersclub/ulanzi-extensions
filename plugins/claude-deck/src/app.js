@@ -32,7 +32,7 @@ const dashboardSessions = (app) =>
   listSessions(app)
     .filter((s) => Date.now() - (s.ts || 0) < DASH_WINDOW_MS)
     .sort((a, b) => (b.activeTs || b.ts || 0) - (a.activeTs || a.ts || 0));
-import { KpiTile, GaugeTile, StatusDot, ActionTile, NameTile, ModeTile, PlanHeroTile, PlanStepTile, SlotTile, SparkTile, BurstTile, palette } from "@ulanzi-lab/tiles";
+import { KpiTile, GaugeTile, StatusDot, ActionTile, NameTile, ModeTile, PlanHeroTile, PlanStepTile, SlotTile, SparkTile, BurstTile, brandize, palette } from "@ulanzi-lab/tiles";
 
 const APP = "claude-code";
 const P = "com.ulanzi.ulanzideck.claudedeck";
@@ -76,7 +76,12 @@ function infoAction(uuid, render) {
       const app = b.settings.app || APP;
       // Follow the session you most recently interacted with; fall back to the
       // legacy single-file state (manual priming / no multi-session adapter).
-      const draw = () => b.setIcon(render(currentSession(app) || readState(app) || {}));
+      // Source badge: a small Claude burst marks tiles fed by Claude Code
+      // (matters once other adapters — cursor/codex — share the deck).
+      const draw = () => {
+        const face = render(currentSession(app) || readState(app) || {});
+        b.setIcon(app === APP ? brandize(face) : face);
+      };
       draw(); // immediate
       // Near-instant switches: redraw the moment any session file changes.
       b.addCleanup(watchSessions(app, draw));
@@ -107,7 +112,7 @@ const Status = defineAction({
     const st = () => (state.stale ? "idle" : state.status || "idle");
     const animating = () => st() === "thinking" || st() === "tool";
     const render = () =>
-      b.setIcon(StatusDot({ status: st(), sub: state.name, stale: state.stale, frame: animating() ? frame : undefined }));
+      b.setIcon(brandize(StatusDot({ status: st(), sub: state.name, stale: state.stale, frame: animating() ? frame : undefined })));
     const refresh = () => { state = currentSession(app) || readState(app) || {}; render(); };
     refresh();
     b.addCleanup(watchSessions(app, refresh));               // instant on state change
@@ -148,12 +153,12 @@ const Name = defineAction({
         setTimeout(draw, 950); // schedule the un-flash
       }
       b.state.sid = s.sessionId;
-      b.setIcon(NameTile({
+      b.setIcon(brandize(NameTile({
         name: (s.pinned ? "📌" : "") + (s.name || "—"),
         sub: s.liveCount > 1 ? `${s.liveCount} live` : s.status || "",
         dim: s.stale,
         flash: Date.now() < flashUntil,
-      }));
+      })));
     };
     draw();
     b.addCleanup(watchSessions(app, draw));
@@ -485,6 +490,18 @@ const Dashboard = defineAction({
  *   dim          = all quiet
  * GIFs are generated once at startup; we only re-send when the state changes.
  */
+/**
+ * Claude Logo key: the mark, alive — a gently breathing orange Claude burst,
+ * always animated. Pure identity: "this deck is Claude." No press action.
+ */
+const CLAUDE_LIVE = gifDataUrl(claudeBurstGif(palette.accent, { mode: "pulse" }));
+const ClaudeLogo = defineAction({
+  uuid: `${P}.claudelogo`,
+  active(b) {
+    b.$UD.setGifDataIcon(b.context, CLAUDE_LIVE);
+  },
+});
+
 // All beacon states are the Claude starburst, colored by state:
 // amber pulsing = needs you, blue spinning = working, green pulsing = unread.
 const GIF_FACES = {
@@ -570,7 +587,7 @@ definePlugin({
   uuid: P,
   actions: [
     Model, Context, Status, Name, Mode, Account, Session, Lines, Cost, Tokens, Trend, CostTrend,
-    Dashboard, Beacon, EffortDial,
+    Dashboard, Beacon, EffortDial, ClaudeLogo,
     Allow, Reject,
     PlanApprove, PlanReject, PlanHero,
     Slot, SmartDial, CmdDial, Macro,

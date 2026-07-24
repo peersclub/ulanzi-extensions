@@ -312,6 +312,24 @@ export function claudeBurst({ cx = SIZE / 2, cy = SIZE / 2, r = 62, color = pale
 }
 
 /**
+ * Stamp a small Claude burst into the corner of an ALREADY-RENDERED tile —
+ * the "this data comes from Claude Code" source badge. Works on any tile's
+ * data-URI without the tile knowing (decode → inject before </svg> → encode).
+ * @param {string} dataUri output of any tile function
+ */
+export function brandize(dataUri, { color = palette.accent } = {}) {
+  try {
+    const svg = Buffer.from(dataUri.split(",")[1], "base64").toString("utf8");
+    const badge =
+      `<circle cx="176" cy="24" r="15" fill="rgba(0,0,0,0.45)"/>` +
+      claudeBurst({ cx: 176, cy: 24, r: 12, color });
+    return toDataUrl(svg.replace("</svg>", badge + "</svg>"));
+  } catch {
+    return dataUri;
+  }
+}
+
+/**
  * Burst tile: the Claude mark as a static key face (beacon's quiet state etc.).
  * @param {{caption?:string, color?:string, dim?:boolean}} [o]
  */
