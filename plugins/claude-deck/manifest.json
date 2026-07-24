@@ -3,7 +3,7 @@
   "Name": "Claude Deck",
   "Description": "Live Claude Code session activity + two-way control on your Ulanzi D200X. Shows model, context %, and a status light (thinking / awaiting input / done), plus control keys (interrupt, approve, deny, /compact, /clear, plan mode, custom slash command) and encoder dials. Complements the Claude Code Usage and AI Cost plugins. Reads live state from a local broker written by the claude-code adapter.",
   "Author": "ulanzi-lab",
-  "Version": "0.1.0",
+  "Version": "1.0.0",
   "Icon": "resources/plugin.png",
   "Category": "Claude Deck",
   "CategoryIcon": "resources/category.png",

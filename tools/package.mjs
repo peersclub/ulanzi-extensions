@@ -47,6 +47,37 @@ await fs.cp(root, stage, {
   dereference: true,
   filter: (src) => !/\/(node_modules|src|\.pkg)(\/|$)/.test(src),
 });
+// Bundle the Claude Code adapter — the plugin has no data without it — plus a
+// setup guide, so the distributed zip is self-sufficient.
+if (name === "claude-deck") {
+  await fs.cp(resolve(REPO, "adapters/claude-code"), join(stage, "adapter"), {
+    recursive: true,
+    filter: (src) => !/\/(node_modules)(\/|$)/.test(src),
+  });
+  await fs.writeFile(
+    join(stage, "INSTALL.md"),
+    `# Claude Deck — setup (one command)
+
+1. Unzip this folder into UlanziDeck's plugin directory:
+   ~/Library/Application Support/Ulanzi/UlanziDeck/Plugins/
+2. Wire the Claude Code adapter (statusline + hooks feed the deck's live data):
+
+       node "$HOME/Library/Application Support/Ulanzi/UlanziDeck/Plugins/${dirName}/adapter/install.mjs" --apply
+
+   (Run without --apply first to preview the settings.json changes. It backs up
+   your settings and never duplicates entries.)
+3. Restart Ulanzi Studio, then RESTART any running claude sessions (they read
+   hooks at launch).
+4. Drag actions from the "Claude Deck" category onto keys and dials.
+
+Requirements: macOS 12+, Ulanzi Studio, Claude Code, Node.js 20+.
+macOS will ask once for Automation permissions (System Events / Terminal) —
+allow them for tab-following to work.
+
+Docs & source: https://github.com/peersclub/ulanzi-extensions
+`
+  );
+}
 await fs.rm(zip, { force: true });
 execFileSync("zip", ["-r", "-q", zip, dirName], { cwd: dirname(stage) });
 await fs.rm(resolve(REPO, "plugins", ".pkg"), { recursive: true, force: true });
