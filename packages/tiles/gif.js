@@ -143,5 +143,46 @@ export function pulseGif(color, size = 96, frames = 10) {
   return encodeGif(size, size, out, pal, 9);
 }
 
+/**
+ * Claude starburst, animated. The logo shape: 12 rays converging on a hollow
+ * center. mode "spin" rotates one ray-period per loop; "pulse" breathes scale.
+ * Drawn with pixel math (angle to nearest ray axis, arc-width ~constant so
+ * rays taper outward like the real mark).
+ * @param {string} color hex "#rrggbb"
+ * @param {{mode?: "spin"|"pulse", size?: number, frames?: number}} [opts]
+ */
+export function claudeBurstGif(color, { mode = "spin", size = 96, frames = 12 } = {}) {
+  const pal = shades(color);
+  const c = size / 2;
+  const RAYS = 12;
+  const STEP = (Math.PI * 2) / RAYS;
+  const out = [];
+  for (let f = 0; f < frames; f++) {
+    const phase = mode === "spin" ? (f / frames) * STEP : 0;
+    const scale = mode === "pulse" ? 0.82 + 0.18 * Math.sin((f / frames) * Math.PI * 2) : 1;
+    const rIn = size * 0.11 * scale;
+    const rOut = size * 0.46 * scale;
+    const halfArc = size * 0.045; // constant arc half-width -> tapered rays
+    const px = new Array(size * size).fill(0);
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const dx = x - c, dy = y - c;
+        const r = Math.hypot(dx, dy);
+        if (r < rIn || r > rOut) continue;
+        let a = Math.atan2(dy, dx) - phase;
+        a = ((a % STEP) + STEP) % STEP;
+        const d = Math.min(a, STEP - a) * r; // arc distance to nearest ray axis
+        if (d < halfArc) {
+          // brighter toward the center, like the inked mark
+          const shade = 7 - Math.min(3, Math.floor(((r - rIn) / (rOut - rIn)) * 3));
+          px[y * size + x] = shade;
+        }
+      }
+    }
+    out.push(px);
+  }
+  return encodeGif(size, size, out, pal, mode === "spin" ? 8 : 9);
+}
+
 /** As a data URI for setGifDataIcon. */
 export const gifDataUrl = (/** @type {Buffer} */ buf) => `data:image/gif;base64,${buf.toString("base64")}`;

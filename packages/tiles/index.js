@@ -295,6 +295,34 @@ export function PlanStepTile({ index = 0, total = 0, text = "" }) {
   );
 }
 
+/**
+ * The Claude starburst as QSvg-safe SVG: 12 tapered rays (rounded rects rotated
+ * around the center). Used for brand faces; the animated variant lives in gif.js.
+ * @param {{cx?:number, cy?:number, r?:number, color?:string}} [o]
+ */
+export function claudeBurst({ cx = SIZE / 2, cy = SIZE / 2, r = 62, color = palette.accent } = {}) {
+  const rays = [];
+  for (let k = 0; k < 12; k++) {
+    rays.push(
+      `<rect x="${cx - r * 0.075}" y="${cy - r}" width="${r * 0.15}" height="${r * 0.62}" rx="${r * 0.075}" ` +
+        `fill="${color}" transform="rotate(${k * 30} ${cx} ${cy})"/>`
+    );
+  }
+  return rays.join("");
+}
+
+/**
+ * Burst tile: the Claude mark as a static key face (beacon's quiet state etc.).
+ * @param {{caption?:string, color?:string, dim?:boolean}} [o]
+ */
+export function BurstTile({ caption, color = palette.accent, dim } = {}) {
+  const c = dim ? palette.dim : color;
+  return doc(
+    claudeBurst({ cy: caption ? 88 : 100, r: 54, color: c }) +
+      (caption ? label({ x: SIZE / 2, y: 172, size: fitSize(caption.toUpperCase(), 26), text: caption.toUpperCase(), weight: 700, fill: dim ? palette.dim : palette.text }) : "")
+  );
+}
+
 /** Permission mode → label + color, so it's obvious why a session does/doesn't prompt. */
 export const modeStyle = {
   default: { label: "ASK", color: palette.info, hint: "prompts you" },

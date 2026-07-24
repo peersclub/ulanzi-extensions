@@ -46,8 +46,21 @@ const shapes = {
   stop: `<rect x="42" y="42" width="60" height="60" rx="12" fill="${C.crit}"/>`,
   terminal: `<rect x="26" y="34" width="92" height="72" rx="12" fill="none" stroke="${C.info}" stroke-width="8"/><text x="44" y="86" font-family="Menlo,monospace" font-size="40" font-weight="700" fill="${C.info}">&#10095;_</text>`,
   shield: `<path d="M72 26 L110 42 L110 78 Q110 108 72 122 Q34 108 34 78 L34 42 Z" fill="none" stroke="${C.warn}" stroke-width="9"/><text x="72" y="90" font-family="-apple-system" font-size="42" font-weight="800" text-anchor="middle" fill="${C.warn}">?</text>`,
-  deckLogo: `<rect x="26" y="26" width="42" height="42" rx="10" fill="${C.accent}"/><rect x="76" y="26" width="42" height="42" rx="10" fill="${C.accent}" opacity="0.75"/><rect x="26" y="76" width="42" height="42" rx="10" fill="${C.accent}" opacity="0.55"/><rect x="76" y="76" width="42" height="42" rx="10" fill="${C.accent}" opacity="0.35"/>`,
+  deckLogo: claudeBurst(72, 72, 58, C.accent),
+  beaconBurst: claudeBurst(72, 72, 52, C.warn),
 };
+
+/** Claude starburst: 12 tapered rays rotated around the center. */
+function claudeBurst(cx, cy, r, color) {
+  const rays = [];
+  for (let k = 0; k < 12; k++) {
+    rays.push(
+      `<rect x="${cx - r * 0.075}" y="${cy - r}" width="${r * 0.15}" height="${r * 0.62}" rx="${r * 0.075}" ` +
+        `fill="${color}" transform="rotate(${k * 30} ${cx} ${cy})"/>`
+    );
+  }
+  return rays.join("");
+}
 
 /** Command-key icon: the literal command text, sized to fit, purple family. */
 function cmdIcon(cmd) {
@@ -81,7 +94,7 @@ const ICONS = {
   smartdial: { body: shapes.fleet, dial: true },
   cmddial: { body: cmdIcon("/···"), dial: true },
   dashboard: { body: shapes.grid },
-  beacon: { body: shapes.radar },
+  beacon: { body: shapes.beaconBurst },
   effortdial: { body: shapes.speedo, dial: true },
   slot: { body: shapes.slot },
   macro: { glyph: ["⌘", C.plan] },

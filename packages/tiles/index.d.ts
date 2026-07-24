@@ -11,6 +11,8 @@ export function GaugeTile(o: { label: string; pct: number; accent?: string; sub?
 export function SparkTile(o: { label: string; values: number[]; accent?: string; value?: string | number }): string;
 export function NameTile(o: { name: string; sub?: string; accent?: string; dim?: boolean; flash?: boolean }): string;
 export function ModeTile(o: { mode?: string }): string;
+export function claudeBurst(o?: { cx?: number; cy?: number; r?: number; color?: string }): string;
+export function BurstTile(o?: { caption?: string; color?: string; dim?: boolean }): string;
 export function SlotTile(o: {
   slot?: number;
   name?: string;

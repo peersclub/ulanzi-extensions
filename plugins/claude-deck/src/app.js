@@ -16,7 +16,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { definePlugin, defineAction } from "@ulanzi-lab/runtime";
-import { spinnerGif, pulseGif, gifDataUrl } from "@ulanzi-lab/tiles/gif.js";
+import { claudeBurstGif, gifDataUrl } from "@ulanzi-lab/tiles/gif.js";
 import { writeDashboard, DASH_PATH } from "./dashboard.js";
 import { startFocusFollower } from "./focus.js";
 import { startHookDaemon } from "./hook-daemon.js";
@@ -32,7 +32,7 @@ const dashboardSessions = (app) =>
   listSessions(app)
     .filter((s) => Date.now() - (s.ts || 0) < DASH_WINDOW_MS)
     .sort((a, b) => (b.activeTs || b.ts || 0) - (a.activeTs || a.ts || 0));
-import { KpiTile, GaugeTile, StatusDot, ActionTile, NameTile, ModeTile, PlanHeroTile, PlanStepTile, SlotTile, SparkTile, palette } from "@ulanzi-lab/tiles";
+import { KpiTile, GaugeTile, StatusDot, ActionTile, NameTile, ModeTile, PlanHeroTile, PlanStepTile, SlotTile, SparkTile, BurstTile, palette } from "@ulanzi-lab/tiles";
 
 const APP = "claude-code";
 const P = "com.ulanzi.ulanzideck.claudedeck";
@@ -485,10 +485,12 @@ const Dashboard = defineAction({
  *   dim          = all quiet
  * GIFs are generated once at startup; we only re-send when the state changes.
  */
+// All beacon states are the Claude starburst, colored by state:
+// amber pulsing = needs you, blue spinning = working, green pulsing = unread.
 const GIF_FACES = {
-  attention: gifDataUrl(pulseGif(palette.warn)),
-  working: gifDataUrl(spinnerGif(palette.info)),
-  unread: gifDataUrl(pulseGif(palette.good)),
+  attention: gifDataUrl(claudeBurstGif(palette.warn, { mode: "pulse" })),
+  working: gifDataUrl(claudeBurstGif(palette.info, { mode: "spin" })),
+  unread: gifDataUrl(claudeBurstGif(palette.good, { mode: "pulse" })),
 };
 const Beacon = defineAction({
   uuid: `${P}.beacon`,
@@ -503,7 +505,7 @@ const Beacon = defineAction({
       else if (live.some((s) => isUnread(s))) face = "unread";
       if (face === b.state.face) return; // GIFs are big — only send on change
       b.state.face = face;
-      if (face === "quiet") b.setIcon(ActionTile({ glyph: "◉", caption: "Fleet", accent: palette.dim }));
+      if (face === "quiet") b.setIcon(BurstTile({ caption: "Fleet", dim: true }));
       else b.$UD.setGifDataIcon(b.context, GIF_FACES[face]);
     };
     draw();
