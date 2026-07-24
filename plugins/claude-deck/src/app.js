@@ -324,15 +324,16 @@ const SmartDial = defineAction({
       const cur = currentSession(app);
       const planMode = !!(cur && !cur.stale && cur.ask?.type === "plan" && cur.plan?.steps?.length);
       if (planMode !== b.state.planMode) { b.state.planMode = planMode; b.state.i = 0; }
+      const wrap = (n) => (b.state.i = ((b.state.i % n) + n) % n); // knobs wrap, never stick at ends
       if (planMode) {
         const steps = cur.plan.steps;
-        b.state.i = Math.max(0, Math.min(b.state.i, steps.length - 1));
+        wrap(steps.length);
         b.setIcon(PlanStepTile({ index: b.state.i, total: steps.length, text: steps[b.state.i] }));
         return;
       }
       const live = liveSessions(app);
       if (!live.length) { b.setIcon(SlotTile({ empty: true })); b.state.sid = null; return; }
-      b.state.i = Math.max(0, Math.min(b.state.i, live.length - 1));
+      wrap(live.length);
       const s = live[b.state.i];
       b.state.sid = s.sessionId;
       b.setIcon(SlotTile({ slot: b.state.i + 1, name: s.name, status: s.status, unread: isUnread(s), pinned: getPin(app)?.sessionId === s.sessionId }));

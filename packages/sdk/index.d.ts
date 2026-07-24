@@ -26,7 +26,11 @@ export type RunPayload = UlanzideckParamRespData<"run">;
 export type SetActivePayload = UlanzideckSetActiveRespData;
 export type ClearPayload = UlanzideckClearRespData;
 export type SettingsPayload = UlanzideckParamRespData<"didReceiveSettings">;
-export type DialRotatePayload = UlanzideckParamRespData<"dialrotate"> & { ticks?: number };
+export type DialRotatePayload = UlanzideckParamRespData<"dialrotate"> & {
+  ticks?: number;
+  /** D200X reports direction here (no ticks field). */
+  rotateEvent?: "left" | "right";
+};
 
 /**
  * The `$UD` object. One instance per plugin process; `connect()` opens the

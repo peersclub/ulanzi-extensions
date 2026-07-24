@@ -276,8 +276,16 @@ export function definePlugin(cfg) {
       $UD.onRun(fireRun);
       $UD.onKeyDown?.(fireRun);
       $UD.onDialRotate?.((d) => {
-        journal("dial", defFor(d.context).uuid, `ticks=${d.ticks ?? 0}`);
-        defFor(d.context).def?.dial?.(ensure(d.context), d.ticks ?? 0);
+        // The D200X reports direction as rotateEvent: "left"|"right" (no ticks
+        // field — confirmed on-device). Normalize to signed ticks for handlers.
+        const ticks =
+          typeof d.ticks === "number" && d.ticks !== 0
+            ? d.ticks
+            : d.rotateEvent === "left" || d.param?.rotateEvent === "left"
+              ? -1
+              : 1;
+        journal("dial", defFor(d.context).uuid, `dir=${ticks < 0 ? "left" : "right"}`);
+        defFor(d.context).def?.dial?.(ensure(d.context), ticks);
       });
       $UD.onDialDown?.((d) => {
         journal("dial-press", defFor(d.context).uuid);
