@@ -21,8 +21,16 @@ import { writeDashboard, DASH_PATH } from "./dashboard.js";
 import { startFocusFollower } from "./focus.js";
 import {
   readState, currentSession, watchSessions,
-  liveSessions, setPin, getPin, clearPin, writeSession,
+  liveSessions, listSessions, setPin, getPin, clearPin, writeSession,
 } from "@ulanzi-lab/broker";
+
+// Dashboard shows a broader window than the 5-min "live" filter, so idle-but-
+// open terminals still appear (with their "last write" age making staleness clear).
+const DASH_WINDOW_MS = 2 * 60 * 60 * 1000;
+const dashboardSessions = (app) =>
+  listSessions(app)
+    .filter((s) => Date.now() - (s.ts || 0) < DASH_WINDOW_MS)
+    .sort((a, b) => (b.activeTs || b.ts || 0) - (a.activeTs || a.ts || 0));
 import { KpiTile, GaugeTile, StatusDot, ActionTile, NameTile, ModeTile, PlanHeroTile, PlanStepTile, SlotTile, SparkTile, palette } from "@ulanzi-lab/tiles";
 
 const APP = "claude-code";
@@ -420,7 +428,7 @@ const Dashboard = defineAction({
   uuid: `${P}.dashboard`,
   active(b) {
     const app = b.settings.app || APP;
-    const regen = () => writeDashboard(liveSessions(app), currentSession(app));
+    const regen = () => writeDashboard(dashboardSessions(app), currentSession(app));
     b.setIcon(ActionTile({ glyph: "▦", caption: "Dashboard", accent: palette.info }));
     regen();
     b.addCleanup(watchSessions(app, regen));

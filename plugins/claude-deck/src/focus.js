@@ -12,9 +12,16 @@
  * System Events" — must be allowed for focus-follow to work.
  */
 import { execFile } from "node:child_process";
-import { basename } from "node:path";
-import { userInfo } from "node:os";
+import { appendFileSync } from "node:fs";
+import { basename, join } from "node:path";
+import { userInfo, homedir } from "node:os";
 import { liveSessions, currentSession, getPin, writeSession } from "@ulanzi-lab/broker";
+
+const FDBG = !!process.env.ULANZI_DEBUG;
+const flog = (...a) => {
+  if (!FDBG) return;
+  try { appendFileSync(join(homedir(), ".ulanzi-ai", "focus.log"), `${new Date().toISOString()} ${a.join(" ")}\n`); } catch {}
+};
 
 const OSA = `tell application "System Events"
   set p to first process whose frontmost is true
@@ -74,22 +81,24 @@ export function startFocusFollower(app, opts = {}) {
     busy = true;
     execFile("osascript", ["-e", OSA], { timeout: 3000 }, async (err, stdout) => {
       busy = false;
-      if (err) return; // no permission yet / transient — stay quiet
+      if (err) { flog("osascript ERROR (permission?):", String(err.message || err).slice(0, 120)); return; }
       const [appName, ...rest] = String(stdout).trim().split("\n");
       const title = rest.join(" ").trim();
-      if (!TERMINAL_APPS.has(appName)) return;
+      if (!TERMINAL_APPS.has(appName)) { flog("frontmost not a terminal:", appName); return; }
       if (title === lastTitle) return; // only react to actual tab/window changes
       lastTitle = title;
       const live = liveSessions(app);
       const hit = matchSession(title, live);
+      flog("title:", JSON.stringify(title), "-> match:", hit ? hit.name : "none");
       if (!hit || hit.sessionId === lastMatched) return;
       lastMatched = hit.sessionId;
-      if (getPin(app)) return; // explicit pin always wins
-      if (currentSession(app)?.sessionId === hit.sessionId) return;
+      if (getPin(app)) { flog("pinned, skip"); return; }
+      if (currentSession(app)?.sessionId === hit.sessionId) { flog("already current"); return; }
       try {
         await writeSession(app, hit.sessionId, {}, { bumpActive: true });
+        flog("SWITCHED ->", hit.name);
         opts.onSwitch?.(hit);
-      } catch {}
+      } catch (e) { flog("write err:", String(e)); }
     });
   };
   const t = setInterval(tick, interval);
