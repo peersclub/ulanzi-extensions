@@ -97,6 +97,21 @@
       "PropertyInspectorPath": "property-inspector/inspector.html"
     },
     {
+      "Name": "Account",
+      "Tooltip": "Which Claude account is logged in (refreshes across /switch-account)",
+      "Icon": "resources/actions/account.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.account",
+      "States": [
+        {
+          "Image": "resources/actions/account.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
       "Name": "Session Timer",
       "Tooltip": "Elapsed time of the current session",
       "Icon": "resources/actions/session.png",

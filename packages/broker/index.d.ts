@@ -21,6 +21,8 @@ export interface AiState {
   mode?: "default" | "acceptEdits" | "plan" | "bypassPermissions" | string;
   effort?: string;
   tty?: string;
+  account?: string;
+  accountOrg?: string;
   cwd?: string;
   note?: string;
   ask?: { type: "permission" | "plan"; tool?: string; cmd?: string; ts?: number } | null;

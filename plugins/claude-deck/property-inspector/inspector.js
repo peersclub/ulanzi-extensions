@@ -11,7 +11,7 @@ let lastSent = null;
 const uuid = Utils.getQueryParams("uuid") || "";
 const isSlot = uuid.endsWith(".slot");
 const isMacro = uuid.endsWith(".macro") || /\.cmd[a-z]+$/.test(uuid);
-const INFO = ["model", "context", "status", "name", "mode", "session", "lines", "planhero", "cost", "tokens", "trend", "costtrend", "dashboard", "beacon"];
+const INFO = ["model", "context", "status", "name", "mode", "account", "session", "lines", "planhero", "cost", "tokens", "trend", "costtrend", "dashboard", "beacon"];
 const isInfo = INFO.some((s) => uuid.endsWith("." + s));
 
 const el = (id) => document.getElementById(id);

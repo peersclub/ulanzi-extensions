@@ -119,6 +119,19 @@ const Status = defineAction({
 // Permission mode of the current session — why it does/doesn't prompt you.
 const Mode = infoAction(`${P}.mode`, (s) => ModeTile({ mode: s.mode }));
 
+// Logged-in account (active disk login, refreshed every statusline render —
+// stays correct across /switch-account). Shows the mailbox name big, org small.
+const Account = infoAction(`${P}.account`, (s) => {
+  const email = s.account || "";
+  const user = email.split("@")[0] || "—";
+  return KpiTile({
+    title: "Account",
+    value: user,
+    sub: s.accountOrg || email.split("@")[1] || "",
+    accent: palette.info,
+  });
+});
+
 // The session/terminal the deck is currently following, + how many are live.
 // Name tile flashes solid orange ("→ SWITCHED") for a beat whenever the deck
 // changes sessions — focus-follow, a prompt elsewhere, or a pin — so switching
@@ -554,7 +567,7 @@ startHookDaemon();
 definePlugin({
   uuid: P,
   actions: [
-    Model, Context, Status, Name, Mode, Session, Lines, Cost, Tokens, Trend, CostTrend,
+    Model, Context, Status, Name, Mode, Account, Session, Lines, Cost, Tokens, Trend, CostTrend,
     Dashboard, Beacon, EffortDial,
     Allow, Reject,
     PlanApprove, PlanReject, PlanHero,

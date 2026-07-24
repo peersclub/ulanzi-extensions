@@ -54,6 +54,20 @@ else if (fromTranscript) contextPct = fromTranscript.pct;
 
 const patch = { model, cwd, linesChanged, name: sessionName(cwd, j?.session_id) };
 if (tty && tty !== "??") patch.tty = tty; // e.g. "ttys009"
+
+// Logged-in account (same source as the user's statusline badge): read fresh
+// every render so it stays correct across /switch-account. Note: this is the
+// active DISK login — hooks don't expose which account an already-running
+// session authenticated with.
+try {
+  const { readFileSync } = await import("node:fs");
+  const { homedir } = await import("node:os");
+  const acct = JSON.parse(readFileSync(homedir() + "/.claude.json", "utf8"))?.oauthAccount;
+  if (acct?.emailAddress) {
+    patch.account = acct.emailAddress;
+    if (acct.organizationName) patch.accountOrg = acct.organizationName;
+  }
+} catch {}
 if (j?.permission_mode) patch.mode = j.permission_mode;
 if (sessionSecs != null) patch.sessionSecs = sessionSecs;
 if (costSession != null) patch.costSession = costSession;

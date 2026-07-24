@@ -68,6 +68,7 @@ const ICONS = {
   status: { body: shapes.ring },
   name: { body: shapes.terminal },
   mode: { body: shapes.shield },
+  account: { glyph: ["👤", C.info, 72, 92] },
   session: { body: shapes.clock },
   lines: { glyph: ["±", C.good, 84] },
   cost: { glyph: ["$", C.good, 84] },

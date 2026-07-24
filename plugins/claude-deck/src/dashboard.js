@@ -75,7 +75,7 @@ export function renderDashboard(sessions, current) {
   code{background:${C.track};padding:1px 5px;border-radius:4px}
   ol{line-height:1.7}
 </style></head><body>
-<h1>🎛 Claude Fleet <span style="color:${C.dim};font-weight:400">· ${sessions.length} live · ${new Date().toLocaleTimeString()}</span></h1>
+<h1>🎛 Claude Fleet <span style="color:${C.dim};font-weight:400">· ${sessions.length} live${current?.account ? ` · 👤 ${esc(current.account)}${current.accountOrg ? " (" + esc(current.accountOrg) + ")" : ""}` : ""} · ${new Date().toLocaleTimeString()}</span></h1>
 ${ask}
 <table><tr><th>#</th><th>Session</th><th>Status</th><th>Mode</th><th>Effort</th><th>Ctx</th><th>Tokens</th><th>Cost</th><th>Ctx trend</th><th>Last write</th></tr>
 ${rows || `<tr><td colspan="10" style="color:${C.dim}">No live sessions</td></tr>`}</table>
