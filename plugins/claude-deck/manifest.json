@@ -276,20 +276,6 @@
       ]
     },
     {
-      "Name": "Fleet Dial",
-      "Tooltip": "Rotate through live sessions; press to pin/unpin the previewed one",
-      "Icon": "resources/actions/fleetdial.png",
-      "UUID": "com.ulanzi.ulanzideck.claudedeck.fleetdial",
-      "States": [
-        {
-          "Image": "resources/actions/fleetdial.png"
-        }
-      ],
-      "Controllers": [
-        "Encoder"
-      ]
-    },
-    {
       "Name": "Macro",
       "Tooltip": "Send a configurable command (e.g. /compact) to the focused terminal via clipboard paste",
       "Icon": "resources/actions/macro.png",
@@ -347,20 +333,6 @@
       ],
       "Controllers": [
         "Keypad"
-      ]
-    },
-    {
-      "Name": "Plan: Dial Through",
-      "Tooltip": "Rotate to step through the plan; press to jump to the first step",
-      "Icon": "resources/actions/planscroll.png",
-      "UUID": "com.ulanzi.ulanzideck.claudedeck.planscroll",
-      "States": [
-        {
-          "Image": "resources/actions/planscroll.png"
-        }
-      ],
-      "Controllers": [
-        "Encoder"
       ]
     },
     {
@@ -481,6 +453,36 @@
       ],
       "Controllers": [
         "Keypad"
+      ]
+    },
+    {
+      "Name": "Smart Dial",
+      "Tooltip": "Context-aware knob: plan pending -> rotate steps, press approves; otherwise rotate live sessions, press pins/unpins",
+      "Icon": "resources/actions/smartdial.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.smartdial",
+      "States": [
+        {
+          "Image": "resources/actions/smartdial.png"
+        }
+      ],
+      "Controllers": [
+        "Encoder"
+      ]
+    },
+    {
+      "Name": "Command Dial",
+      "Tooltip": "Command palette on a knob: rotate through /compact /clear /cost ... press to send (list editable in settings)",
+      "Icon": "resources/actions/cmddial.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cmddial",
+      "States": [
+        {
+          "Image": "resources/actions/cmddial.png"
+        }
+      ],
+      "Controllers": [
+        "Encoder"
       ]
     }
   ]

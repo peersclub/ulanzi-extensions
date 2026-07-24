@@ -253,33 +253,8 @@ const PlanHero = infoAction(`${P}.planhero`, (s) =>
   PlanHeroTile({ steps: s.plan && !s.stale ? s.plan.steps : [], dim: s.stale })
 );
 
-// Encoder: dial through the plan's steps; press to jump back to the first.
-const PlanScroll = defineAction({
-  uuid: `${P}.planscroll`,
-  active(b) {
-    const app = b.settings.app || APP;
-    b.state.i = 0;
-    const draw = () => {
-      const s = currentSession(app) || {};
-      const steps = s.plan && !s.stale ? s.plan.steps : [];
-      if (!steps.length) { b.setIcon(PlanHeroTile({ steps: [], dim: true })); return; }
-      b.state.i = Math.max(0, Math.min(b.state.i, steps.length - 1));
-      b.setIcon(PlanStepTile({ index: b.state.i, total: steps.length, text: steps[b.state.i] }));
-    };
-    b.state.draw = draw;
-    draw();
-    b.addCleanup(watchSessions(app, draw));
-    b.every(STALENESS_MS, draw, { leading: false });
-  },
-  dial(b, ticks) {
-    b.state.i = (b.state.i || 0) + (ticks < 0 ? -1 : 1);
-    b.state.draw?.();
-  },
-  dialDown(b) {
-    b.state.i = 0;
-    b.state.draw?.();
-  },
-});
+// (Plan dial-through and fleet selection both live in SmartDial now — one knob
+// that morphs by context instead of two mostly-idle dedicated dials.)
 
 // --- Fleet view (Codex-Micro-style): one key per live session -----------------
 
@@ -335,20 +310,32 @@ const Slot = defineAction({
   },
 });
 
-/** Fleet Dial: rotate to preview each live session; press to pin/unpin it. */
-const FleetDial = defineAction({
-  uuid: `${P}.fleetdial`,
+/**
+ * Smart Dial: the knob's function morphs with context, so it's never dead.
+ *   plan pending  -> rotate through the plan's steps; PRESS = approve the plan
+ *   otherwise     -> rotate through live sessions;    PRESS = pin/unpin
+ */
+const SmartDial = defineAction({
+  uuid: `${P}.smartdial`,
   active(b) {
     const app = b.settings.app || APP;
     b.state.i = 0;
     const draw = () => {
+      const cur = currentSession(app);
+      const planMode = !!(cur && !cur.stale && cur.ask?.type === "plan" && cur.plan?.steps?.length);
+      if (planMode !== b.state.planMode) { b.state.planMode = planMode; b.state.i = 0; }
+      if (planMode) {
+        const steps = cur.plan.steps;
+        b.state.i = Math.max(0, Math.min(b.state.i, steps.length - 1));
+        b.setIcon(PlanStepTile({ index: b.state.i, total: steps.length, text: steps[b.state.i] }));
+        return;
+      }
       const live = liveSessions(app);
       if (!live.length) { b.setIcon(SlotTile({ empty: true })); b.state.sid = null; return; }
       b.state.i = Math.max(0, Math.min(b.state.i, live.length - 1));
       const s = live[b.state.i];
       b.state.sid = s.sessionId;
-      const pinned = getPin(app)?.sessionId === s.sessionId;
-      b.setIcon(SlotTile({ slot: b.state.i + 1, name: s.name, status: s.status, unread: isUnread(s), pinned }));
+      b.setIcon(SlotTile({ slot: b.state.i + 1, name: s.name, status: s.status, unread: isUnread(s), pinned: getPin(app)?.sessionId === s.sessionId }));
     };
     b.state.draw = draw;
     draw();
@@ -361,11 +348,52 @@ const FleetDial = defineAction({
   },
   async dialDown(b) {
     const app = b.settings.app || APP;
+    if (b.state.planMode) {
+      b.hotkey(b.settings.keylist || "y"); // approve the reviewed plan
+      b.toast("Plan approved");
+      return;
+    }
     const sid = b.state.sid;
     if (!sid) return;
     if (getPin(app)?.sessionId === sid) await clearPin(app);
     else { await setPin(app, sid); await writeSession(app, sid, { viewedTs: Date.now() }); }
     b.state.draw?.();
+  },
+});
+
+/**
+ * Command Dial: a command palette on one knob — rotate through the list
+ * (PI `command` = comma-separated), press to send the shown command.
+ */
+const CmdDial = defineAction({
+  uuid: `${P}.cmddial`,
+  active(b) {
+    b.state.i = 0;
+    const list = () =>
+      (b.settings.command || "/compact,/clear,/context,/cost,/resume,/model,/AIUse,/switch-account")
+        .split(",").map((s) => s.trim()).filter(Boolean);
+    b.state.list = list;
+    const draw = () => {
+      const cmds = list();
+      b.state.i = ((b.state.i % cmds.length) + cmds.length) % cmds.length;
+      b.setIcon(ActionTile({
+        glyph: "/",
+        caption: cmds[b.state.i].replace(/^\//, "").slice(0, 12),
+        accent: palette.plan,
+        sub: `${b.state.i + 1}/${cmds.length} · press sends`,
+      }));
+    };
+    b.state.draw = draw;
+    draw();
+  },
+  settings(b) { b.state.draw?.(); },
+  dial(b, ticks) {
+    b.state.i += ticks < 0 ? -1 : 1;
+    b.state.draw?.();
+  },
+  dialDown(b) {
+    const cmds = b.state.list();
+    sendCommand(b, cmds[((b.state.i % cmds.length) + cmds.length) % cmds.length]);
   },
 });
 
@@ -376,6 +404,17 @@ const FleetDial = defineAction({
  * Macro key and the preset command row (/compact, /clear, /cost, ...).
  * @param {string} uuid @param {string} defaultCmd @param {string} [glyph]
  */
+/** Send a command to the focused terminal: pbcopy -> ⌘V -> enter (PI-overridable). */
+function sendCommand(b, cmd, keylistDefault = "⌘V enter") {
+  const p = execFile("pbcopy");
+  p.stdin.end(cmd);
+  p.on("close", () => {
+    const keys = (b.settings.keylist || keylistDefault).trim().split(/\s+/);
+    keys.forEach((k, i) => setTimeout(() => b.hotkey(k), 120 + i * 120));
+  });
+  b.toast(`Sent ${cmd}`);
+}
+
 function macroAction(uuid, defaultCmd, glyph = "⌘") {
   const face = (b) => {
     const cmd = b.settings.command || defaultCmd;
@@ -386,14 +425,7 @@ function macroAction(uuid, defaultCmd, glyph = "⌘") {
     active: face,
     settings: face,
     run(b) {
-      const cmd = b.settings.command || defaultCmd;
-      const p = execFile("pbcopy");
-      p.stdin.end(cmd);
-      p.on("close", () => {
-        const keys = (b.settings.keylist || "⌘V enter").trim().split(/\s+/);
-        keys.forEach((k, i) => setTimeout(() => b.hotkey(k), 120 + i * 120));
-      });
-      b.toast(`Sent ${cmd}`);
+      sendCommand(b, b.settings.command || defaultCmd);
     },
   });
 }
@@ -524,8 +556,8 @@ definePlugin({
     Model, Context, Status, Name, Mode, Session, Lines, Cost, Tokens, Trend, CostTrend,
     Dashboard, Beacon, EffortDial,
     Allow, Reject,
-    PlanApprove, PlanReject, PlanHero, PlanScroll,
-    Slot, FleetDial, Macro,
+    PlanApprove, PlanReject, PlanHero,
+    Slot, SmartDial, CmdDial, Macro,
     CmdCompact, CmdClear, CmdContext, CmdCost, CmdResume, CmdModel, CmdUsage, CmdSwitch,
   ],
 }).start();

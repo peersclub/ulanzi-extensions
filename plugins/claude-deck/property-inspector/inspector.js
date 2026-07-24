@@ -27,6 +27,8 @@ const DEFAULTS = {
   planapprove: { keylist: "y" },
   planreject: { keylist: "n" },
   slot: { slot: "1" },
+  smartdial: { keylist: "y" },
+  cmddial: { command: "/compact,/clear,/context,/cost,/resume,/model,/AIUse,/switch-account", keylist: "⌘V enter" },
   macro: { command: "/compact", keylist: "⌘V enter" },
   cmdcompact: { command: "/compact", keylist: "⌘V enter" },
   cmdclear: { command: "/clear", keylist: "⌘V enter" },
