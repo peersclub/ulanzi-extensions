@@ -473,7 +473,7 @@ const Dashboard = defineAction({
     b.every(STALENESS_MS, regen, { leading: false });
   },
   run(b) {
-    b.$UD.openView(DASH_PATH, 760, 540);
+    b.$UD.openView(DASH_PATH, 1040, 720);
   },
 });
 
