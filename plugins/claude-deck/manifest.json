@@ -127,81 +127,6 @@
       "PropertyInspectorPath": "property-inspector/inspector.html"
     },
     {
-      "Name": "Interrupt",
-      "Tooltip": "Interrupt Claude (Esc)",
-      "Icon": "resources/actions/interrupt.png",
-      "PropertyInspectorPath": "property-inspector/inspector.html",
-      "UUID": "com.ulanzi.ulanzideck.claudedeck.interrupt",
-      "States": [
-        {
-          "Image": "resources/actions/interrupt.png"
-        }
-      ],
-      "Controllers": [
-        "Keypad"
-      ]
-    },
-    {
-      "Name": "Approve",
-      "Tooltip": "Approve the current permission prompt",
-      "Icon": "resources/actions/approve.png",
-      "PropertyInspectorPath": "property-inspector/inspector.html",
-      "UUID": "com.ulanzi.ulanzideck.claudedeck.approve",
-      "States": [
-        {
-          "Image": "resources/actions/approve.png"
-        }
-      ],
-      "Controllers": [
-        "Keypad"
-      ]
-    },
-    {
-      "Name": "Deny",
-      "Tooltip": "Deny the current permission prompt",
-      "Icon": "resources/actions/deny.png",
-      "PropertyInspectorPath": "property-inspector/inspector.html",
-      "UUID": "com.ulanzi.ulanzideck.claudedeck.deny",
-      "States": [
-        {
-          "Image": "resources/actions/deny.png"
-        }
-      ],
-      "Controllers": [
-        "Keypad"
-      ]
-    },
-    {
-      "Name": "Plan Mode",
-      "Tooltip": "Toggle plan mode (Shift+Tab)",
-      "Icon": "resources/actions/plan.png",
-      "PropertyInspectorPath": "property-inspector/inspector.html",
-      "UUID": "com.ulanzi.ulanzideck.claudedeck.plan",
-      "States": [
-        {
-          "Image": "resources/actions/plan.png"
-        }
-      ],
-      "Controllers": [
-        "Keypad"
-      ]
-    },
-    {
-      "Name": "Slash Command",
-      "Tooltip": "Type a configurable slash command (e.g. /compact, /clear)",
-      "Icon": "resources/actions/slash.png",
-      "PropertyInspectorPath": "property-inspector/inspector.html",
-      "UUID": "com.ulanzi.ulanzideck.claudedeck.slash",
-      "States": [
-        {
-          "Image": "resources/actions/slash.png"
-        }
-      ],
-      "Controllers": [
-        "Keypad"
-      ]
-    },
-    {
       "Name": "Allow",
       "Tooltip": "Contextual: allow the current permission prompt (dim when none)",
       "Icon": "resources/actions/allow.png",
@@ -210,21 +135,6 @@
       "States": [
         {
           "Image": "resources/actions/allow.png"
-        }
-      ],
-      "Controllers": [
-        "Keypad"
-      ]
-    },
-    {
-      "Name": "Always Allow",
-      "Tooltip": "Contextual: allow and don't ask again (dim when none)",
-      "Icon": "resources/actions/alwaysallow.png",
-      "PropertyInspectorPath": "property-inspector/inspector.html",
-      "UUID": "com.ulanzi.ulanzideck.claudedeck.alwaysallow",
-      "States": [
-        {
-          "Image": "resources/actions/alwaysallow.png"
         }
       ],
       "Controllers": [
@@ -447,20 +357,6 @@
       "States": [
         {
           "Image": "resources/actions/planscroll.png"
-        }
-      ],
-      "Controllers": [
-        "Encoder"
-      ]
-    },
-    {
-      "Name": "Transcript Scroll",
-      "Tooltip": "Scroll the terminal/transcript with the dial",
-      "Icon": "resources/actions/scroll.png",
-      "UUID": "com.ulanzi.ulanzideck.claudedeck.scroll",
-      "States": [
-        {
-          "Image": "resources/actions/scroll.png"
         }
       ],
       "Controllers": [

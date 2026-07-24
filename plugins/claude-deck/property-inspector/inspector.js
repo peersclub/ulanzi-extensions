@@ -9,8 +9,6 @@ let settings = {};
 let lastSent = null;
 
 const uuid = Utils.getQueryParams("uuid") || "";
-const isSlash = uuid.endsWith(".slash");
-const isScroll = uuid.endsWith(".scroll");
 const isSlot = uuid.endsWith(".slot");
 const isMacro = uuid.endsWith(".macro");
 const INFO = ["model", "context", "status", "name", "mode", "session", "lines", "planhero", "cost", "tokens", "trend", "costtrend", "dashboard", "beacon"];
@@ -24,14 +22,7 @@ const fields = ["keylist", "command", "keylistUp", "keylistDown", "app", "slot"]
 // the code defaults in src/app.js.
 const key = uuid.split(".").pop();
 const DEFAULTS = {
-  interrupt: { keylist: "escape" },
-  approve: { keylist: "y" },
-  deny: { keylist: "n" },
-  plan: { keylist: "shift+tab" },
-  slash: { command: "/compact" },
-  scroll: { keylistUp: "up", keylistDown: "down" },
   allow: { keylist: "y" },
-  alwaysallow: { keylist: "down enter" },
   reject: { keylist: "n" },
   planapprove: { keylist: "y" },
   planreject: { keylist: "n" },
@@ -67,12 +58,6 @@ function showRows() {
     return;
   }
   if (isMacro) el("row-command").classList.remove("hide"); // command + calibratable keys
-  if (isSlash) el("row-command").classList.remove("hide");
-  if (isScroll) {
-    el("row-up").classList.remove("hide");
-    el("row-down").classList.remove("hide");
-    el("row-keylist").classList.add("hide"); // scroll uses up/down, not a single key
-  }
 }
 
 function populate(p) {

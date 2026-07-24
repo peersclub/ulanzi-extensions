@@ -198,32 +198,11 @@ const Trend = infoAction(`${P}.trend`, (s) => {
   });
 });
 
-/**
- * Build a CONTROL action: static face while active, hotkey on press.
- * @param {string} uuid @param {string} glyph @param {string} caption @param {string} defaultKey
- */
-function controlAction(uuid, glyph, caption, defaultKey) {
-  return defineAction({
-    uuid,
-    active(b) {
-      b.state.face = ActionTile({ glyph, caption, accent: palette.info });
-      b.setIcon(b.state.face);
-    },
-    run(b) {
-      const key = b.settings.keylist || defaultKey;
-      // `command` is provided by the slash-command inspector; if present, prefer it.
-      const key2 = b.settings.command || key;
-      if (key2) b.hotkey(key2);
-      b.toast(`${caption}`);
-    },
-  });
-}
-
-const Interrupt = controlAction(`${P}.interrupt`, "⎋", "Interrupt", "escape");
-const Approve = controlAction(`${P}.approve`, "✓", "Approve", "y");
-const Deny = controlAction(`${P}.deny`, "✕", "Deny", "n");
-const Plan = controlAction(`${P}.plan`, "⇧", "Plan", "shift+tab");
-const Slash = controlAction(`${P}.slash`, "/", "Command", "");
+// (The static hotkey control keys — Interrupt/Approve/Deny/Plan-toggle/Slash and
+// the Transcript Scroll dial — were removed: they depended on keystroke tokens
+// never verified on-device (escape/shift+tab/arrows) or a broken send method.
+// The contextual Allow/Deny (proven y/n), Macro (clipboard ⌘V) and Effort Dial
+// (settings.json write) cover their use cases with verified mechanisms.)
 
 /**
  * Contextual permission key: dim/no-op until the current session shows a
@@ -262,7 +241,6 @@ function permAction(uuid, label, glyph, accent, defaultKeys, askType = "permissi
 // Defaults use plain letters (y/n) — the permission prompt accepts them and they
 // avoid the undocumented special-key tokens, so they're the best first hotkey test.
 const Allow = permAction(`${P}.allow`, "Allow", "✓", palette.good, "y");
-const AlwaysAllow = permAction(`${P}.alwaysallow`, "Always", "✓✓", palette.info, "down enter");
 const Reject = permAction(`${P}.reject`, "Deny", "✕", palette.crit, "n");
 
 // --- Plan mode: contextual keys armed when a plan is presented (ask.type "plan") ---
@@ -519,23 +497,6 @@ const EffortDial = defineAction({
   },
 });
 
-/** Encoder: rotate to scroll the transcript, press to jump to bottom. */
-const Scroll = defineAction({
-  uuid: `${P}.scroll`,
-  active(b) {
-    b.setIcon(ActionTile({ glyph: "↕", caption: "Scroll", accent: palette.warn }));
-  },
-  dial(b, ticks) {
-    const up = b.settings.keylistUp || "up";
-    const down = b.settings.keylistDown || "down";
-    const key = ticks < 0 ? up : down;
-    for (let i = 0; i < Math.min(Math.abs(ticks) || 1, 5); i++) b.hotkey(key);
-  },
-  dialDown(b) {
-    b.hotkey(b.settings.keylistBottom || "shift+g");
-  },
-});
-
 // Follow the terminal tab you focus (pin still wins). One-time macOS consent
 // ("UlanziDeck wants to control System Events") may appear on first run.
 startFocusFollower(APP);
@@ -545,9 +506,8 @@ definePlugin({
   actions: [
     Model, Context, Status, Name, Mode, Session, Lines, Cost, Tokens, Trend, CostTrend,
     Dashboard, Beacon, EffortDial,
-    Allow, AlwaysAllow, Reject,
+    Allow, Reject,
     PlanApprove, PlanReject, PlanHero, PlanScroll,
     Slot, FleetDial, Macro,
-    Interrupt, Approve, Deny, Plan, Slash, Scroll,
   ],
 }).start();
