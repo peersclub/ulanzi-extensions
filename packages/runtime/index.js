@@ -13,6 +13,7 @@
  *   definePlugin({ uuid: "com.ulanzi.ulanzideck.foo", actions: [Foo] }).start();
  */
 import UlanziApi from "@ulanzi-lab/sdk";
+import { execSync } from "node:child_process";
 import { appendFileSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -199,13 +200,22 @@ export function definePlugin(cfg) {
       // bridge is ready, so we must survive a failed connect and retry.
       let reconnectT = null;
       let reconnectTries = 0;
+      const studioAlive = () => {
+        try {
+          execSync("pgrep -f 'Ulanzi Studio.app/Contents/MacOS/UlanziDeck'", { stdio: "pipe" });
+          return true;
+        } catch { return false; }
+      };
       const scheduleReconnect = () => {
         if (reconnectT) return;
-        // Orphan guard: if Studio is gone for ~1 minute, EXIT instead of
-        // reconnecting forever. A killed/restarted Studio spawns a fresh
-        // instance; immortal orphans otherwise pile up and fight over the keys
-        // (observed: five instances overwriting each other's tiles).
-        if (++reconnectTries > 40) { dbg("giving up after", reconnectTries, "reconnects — exiting"); process.exit(0); }
+        // Orphan guard: exit ONLY when Studio itself is gone (a killed/restarted
+        // Studio spawns a fresh instance; immortal orphans otherwise pile up).
+        // A flaky bridge while Studio is alive must NOT be fatal — that turned
+        // transient drops into a permanently dead deck.
+        if (++reconnectTries > 40) {
+          if (!studioAlive()) { dbg("Studio gone — exiting orphan"); process.exit(0); }
+          reconnectTries = 0; // Studio alive: keep trying forever
+        }
         reconnectT = setTimeout(() => {
           reconnectT = null;
           dbg("reconnecting");
@@ -213,6 +223,12 @@ export function definePlugin(cfg) {
         }, 1500);
       };
       $UD.onError((e) => { dbg("ws error", String(e)); scheduleReconnect(); });
+
+      // Idle keepalive: an idle deck can go minutes without sending anything —
+      // ping the socket so quiet connections aren't reaped as dead.
+      setInterval(() => {
+        try { if ($UD.websocket?.readyState === 1) $UD.websocket.ping?.(); } catch {}
+      }, 20_000);
 
       $UD.connect(cfg.uuid);
       dbg("connect", cfg.uuid, "actions:", [...byUuid.keys()].join(","));
@@ -303,7 +319,11 @@ export function definePlugin(cfg) {
         if (Array.isArray(params)) params.forEach((p) => dispose(p.context));
       });
 
-      $UD.onClose(() => { for (const c of [...buttons.keys()]) dispose(c); scheduleReconnect(); });
+      // On a WS drop: KEEP the buttons (timers/watchers stay armed; sends no-op
+      // while the socket is closed) so tiles resume the instant we reconnect.
+      // Disposing them here left the deck alive-but-frozen after reconnects
+      // when Studio didn't re-send `add` events to the same process.
+      $UD.onClose(() => { dbg("ws closed"); scheduleReconnect(); });
 
       const bye = () => { for (const c of [...buttons.keys()]) dispose(c); process.exit(0); };
       process.on("SIGINT", bye);
