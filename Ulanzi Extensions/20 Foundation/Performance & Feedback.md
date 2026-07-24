@@ -47,6 +47,14 @@ runtime's `Button`). This is the single biggest perceived-responsiveness win.
 3. One physical press fires `run` + `keydown` → double execution (pin toggles!)
 4. Dials report `rotateEvent: "left"/"right"`, not `ticks` → direction lost
 5. Claude renames tab titles → title-based focus matching fails ([[Focus Follow]])
+6. **Immortal orphans**: pkill-style Studio restarts orphan the plugin child,
+   and the reconnect loop kept them alive — FIVE instances were found fighting
+   over the keys, stale ones overwriting fresh renders ("the badge doesn't
+   show"). Fix: orphan guard (exit after ~1min of failed reconnects) + restart
+   procedure must kill the plugin process too and verify **exactly one**
+   instance whose start time is newer than the build.
+7. Corner badges must be ~14% of the key: r=12 on the 200px canvas survived as
+   ~2 physical pixels on the LCD (invisible).
 
 None were catchable off-device. Hardware is the only honest test environment.
 

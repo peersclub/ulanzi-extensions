@@ -59,9 +59,9 @@ deck into a power-user control surface for AI coding tools, starting with Claude
 | Area | State |
 |---|---|
 | Foundation packages | ✅ built + unit-tested (22 tests) |
-| Claude Deck plugin | ✅ **v1.0.0 released** — 31 verified actions |
-| Physical D200X validation | ✅ rendering, hotkeys (y/n), dials, focus-follow all proven |
-| Publishing | 🟡 [[Release & Publishing\|GitHub live · Community Store pending · official email drafted]] |
+| Claude Deck plugin | ✅ **v1.0.1 released** — 33 verified actions, pixel-Claude branded |
+| Physical D200X validation | ✅ rendering, hotkeys (y/n), dials (both directions), focus-follow, dashboard popup all proven |
+| Publishing | 🟡 [[Release & Publishing\|GitHub v1.0.1 live · Community Store pending · official email drafted]] |
 | Last calibration item | `enter` submit token — [[Open Questions]] #7 |
 
 See [[Roadmap & Phases]] for what's next.

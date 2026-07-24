@@ -40,6 +40,27 @@ there. Treating every Notification as an interaction let **idle sessions steal
 idle reminders are liveness heartbeats only — which also stops idle sessions
 showing false amber "needs you" on [[Fleet Deck]] slots.
 
+## Reliability hardening (v1.0.1)
+
+"Worked twice then stopped" root cause: focus candidates came from the 5-minute
+**live** set, so terminals idle >5min silently became unswitchable. Fixes:
+
+- **2-hour candidate window** — tty matching is exact, so no false positives;
+  the switch bump itself revives a quiet session.
+- **Keepalive** — the session whose tab you're sitting on gets a liveness write
+  (max 1/min), so the deck never goes stale-dim under your eyes.
+- **Newest-writer wins** when several sessions share a tty (restarts in the
+  same terminal).
+- The whole poll tick is exception-guarded (an unhandled rejection would have
+  killed the plugin).
+
+## Pin auto-release
+
+Pin semantics: **"show that session until I return to it."** Arriving at the
+pinned session's own tab releases the pin and tab-following resumes; sitting on
+it or working elsewhere keeps it in force. This dissolved the accidental-pin
+trap (a stray slot/knob press silently froze tab-following — twice).
+
 ## Permissions (one-time macOS consents)
 
 UlanziDeck → **System Events** (frontmost window) and → **Terminal** (tty probe).

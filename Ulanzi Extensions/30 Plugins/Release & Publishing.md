@@ -4,6 +4,13 @@ tags: [plugin, release, publishing]
 
 # Release & Publishing
 
+## v1.0.1 (2026-07-24) — "Focus-follow you can trust"
+
+https://github.com/peersclub/ulanzi-extensions/releases/tag/v1.0.1 — the
+[[Focus Follow]] reliability layer (2h window, keepalive, crash guards, pin
+auto-release) + store-listing compliance. The community-store bot picks up the
+latest release, so a merge of issue #42 ships this build.
+
 ## v1.0.0 (2026-07-24)
 
 - **GitHub release:** https://github.com/peersclub/ulanzi-extensions/releases/tag/v1.0.0

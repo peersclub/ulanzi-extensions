@@ -8,6 +8,16 @@ The flagship plugin. UUID `com.ulanzi.ulanzideck.claudedeck`. Source in
 `plugins/claude-deck/`. Built on [[Package - runtime]] + [[Package - tiles]],
 fed by [[Adapter - Claude Code]] via the [[Broker Contract|broker]].
 
+> [!success] Since v1.0.1 (2026-07-24, latest)
+> **Account tile** (👤 logged-in email + org, refreshes across /switch-account —
+> pairs with the /switch-account command key). **Dashboard v2**: fleet KPI
+> header + rich session cards (gauges, dual sparklines, chips, per-card ask
+> banner + collapsible plan, CSS pulse animations — the popup is a real web
+> view, not QSvg). **Pixel-Claude branding**: the real mascot (12×8 grid) as
+> the plugin icon, a breathing **Claude Logo** key, state-colored bouncing/
+> breathing Beacon, and a corner source-badge stamped on every Claude-fed tile
+> via `brandize()` (tile-agnostic decode→inject→encode).
+
 > [!success] v1.0.0 shipped (2026-07-24) — see [[Release & Publishing]]
 > Current inventory (31 actions): 12 live info tiles (incl. Cost, Tokens, Ctx &
 > Cost trends), fleet slots + beacon + dashboard, contextual Allow/Deny + plan
