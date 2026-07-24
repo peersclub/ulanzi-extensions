@@ -8,6 +8,17 @@ The flagship plugin. UUID `com.ulanzi.ulanzideck.claudedeck`. Source in
 `plugins/claude-deck/`. Built on [[Package - runtime]] + [[Package - tiles]],
 fed by [[Adapter - Claude Code]] via the [[Broker Contract|broker]].
 
+> [!success] v1.0.0 shipped (2026-07-24) — see [[Release & Publishing]]
+> Current inventory (31 actions): 12 live info tiles (incl. Cost, Tokens, Ctx &
+> Cost trends), fleet slots + beacon + dashboard, contextual Allow/Deny + plan
+> keys, a **preset command row** (/compact /clear /context /cost /resume /model
+> /AIUse /switch-account — clipboard ⌘V injection), and three always-alive knobs:
+> **Smart Dial** (morphs: plan pending → rotate steps + press approves; else
+> rotate sessions + press pins), **Command Dial** (palette on a knob), **Effort
+> Dial** (live settings.json write). Dial direction verified on-device after the
+> `rotateEvent` fix; knobs wrap instead of clamping. All actions have designed
+> icons. [[Focus Follow]] keeps the whole deck on the terminal tab you're in.
+
 > [!success] Curated to fully-functional (2026-07-24)
 > The action set was trimmed 30 → 23: removed Interrupt / static Approve+Deny /
 > Plan-mode toggle / Slash Command / Transcript Scroll / Always Allow — all

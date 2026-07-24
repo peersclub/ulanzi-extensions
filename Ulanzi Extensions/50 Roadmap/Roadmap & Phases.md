@@ -4,6 +4,14 @@ tags: [roadmap]
 
 # Roadmap & Phases
 
+## Shipped 🚀 (2026-07-24)
+
+**v1.0.0 released and submitted to stores** — [[Release & Publishing]].
+Along the way: [[Fleet Deck]] (Codex-Micro fleet), [[Focus Follow]] (tty-exact
+tab tracking), [[Performance & Feedback]] (7ms hook fast-path, press echo),
+smart context-morphing knobs, preset command row, designed icons, and the
+curation to verified-only actions.
+
 ## Done ✅
 
 - **Foundation** — [[Package - sdk|sdk]], [[Package - runtime|runtime]],

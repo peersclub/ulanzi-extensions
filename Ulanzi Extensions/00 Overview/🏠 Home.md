@@ -37,12 +37,15 @@ deck into a power-user control surface for AI coding tools, starting with Claude
 ### Plugins
 - [[Claude Deck]] — the flagship (live session activity + control)
 - [[Fleet Deck]] — Codex-Micro-style: one key per live session, press to pin
+- [[Release & Publishing]] — v1.0.0, store submissions, self-contained zip
 - [[Plugin Catalog & Ideas]] — future extensions
 
 ### Adapters & data
 - [[Broker Contract]] — the app-agnostic state schema
 - [[Adapter - Claude Code]] — statusline + hooks
 - [[Multi-Session & Naming]] — many terminals, follow the one you're using
+- [[Focus Follow]] — the deck tracks your focused tab (exact tty matching)
+- [[Performance & Feedback]] — 7ms fast-path, press echo, latency table
 - [[Future Adapters]] — Cursor, Codex, Gemini, Copilot
 
 ### Roadmap & reference
@@ -55,9 +58,10 @@ deck into a power-user control surface for AI coding tools, starting with Claude
 
 | Area | State |
 |---|---|
-| Foundation packages | ✅ built + unit-tested |
-| Claude Deck plugin | ✅ built, connects to live Studio |
-| Claude Code adapter | ✅ built + verified (broker→tiles) |
-| Physical D200X validation | ⏳ pending (key render + [[Hotkeys & Control\|hotkey format]]) |
+| Foundation packages | ✅ built + unit-tested (22 tests) |
+| Claude Deck plugin | ✅ **v1.0.0 released** — 31 verified actions |
+| Physical D200X validation | ✅ rendering, hotkeys (y/n), dials, focus-follow all proven |
+| Publishing | 🟡 [[Release & Publishing\|GitHub live · Community Store pending · official email drafted]] |
+| Last calibration item | `enter` submit token — [[Open Questions]] #7 |
 
 See [[Roadmap & Phases]] for what's next.

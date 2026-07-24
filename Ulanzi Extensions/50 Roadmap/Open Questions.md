@@ -40,7 +40,27 @@ after each rebuild? Confirm the smoothest [[Tooling|dev loop]] step.
 Symlink created and resolves; confirm Studio loads a plugin through a symlink
 across restarts (vs requiring a real folder / zip install).
 
+## 7. Does the final `enter` submit injected commands? (last calibration item)
+
+The command row / Command Dial paste via `⌘V` (documented format) then send
+`enter`. Letters (`y`/`n`) and ⌘V are proven; `enter` is the one token never
+explicitly confirmed. **To confirm:** press a command key with a terminal
+focused — if the command submits itself, done; if it only pastes, change the
+final keystroke (`return` / `⏎`) in any key's PI and report back.
+
+## 8. Store review outcomes (external)
+
+- Community Store: [issue #42](https://github.com/narlei/ulanzicommunitystore/issues/42) pending bot/maintainer.
+- Official store: email pending user send (`docs/official-submission-email.md`).
+  Possible re-namespace request (we use `com.ulanzi.ulanzideck.*`).
+
 ## Answered
+
+- **Dial rotation direction** (2026-07-24) — the D200X sends
+  `rotateEvent: "left"|"right"` (no `ticks` field; every event arrived `ticks=0`).
+  Found via the press-journal capture + a reference plugin's SDK. Runtime
+  normalizes to signed ticks; verified on-device both directions. Knobs also
+  wrap now instead of clamping. See [[Performance & Feedback]].
 
 - **Hotkey injection works** (2026-07-23) — confirmed end-to-end on the real
   D200X: pressing the contextual **Allow** key fired `y` and it landed in a text
