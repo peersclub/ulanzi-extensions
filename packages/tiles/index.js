@@ -138,7 +138,7 @@ export function StatusDot({ status, sub, stale, frame }) {
       : // spinner: faint track + a rotating ~90° arc
         `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${palette.track}" stroke-width="10"/>` +
         `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round" ` +
-        `stroke-dasharray="72 217" transform="rotate(${(frame * 45) % 360} ${cx} ${cy})"/>`;
+        `stroke-dasharray="72 217" transform="rotate(${(frame * 30) % 360} ${cx} ${cy})"/>`;
   return doc(
     ring +
       label({ x: cx, y: 104, size: 52, text: s.glyph, weight: 800, fill: color }) +

@@ -19,6 +19,7 @@ import { definePlugin, defineAction } from "@ulanzi-lab/runtime";
 import { spinnerGif, pulseGif, gifDataUrl } from "@ulanzi-lab/tiles/gif.js";
 import { writeDashboard, DASH_PATH } from "./dashboard.js";
 import { startFocusFollower } from "./focus.js";
+import { startHookDaemon } from "./hook-daemon.js";
 import {
   readState, currentSession, watchSessions,
   liveSessions, listSessions, setPin, getPin, clearPin, writeSession,
@@ -38,8 +39,8 @@ const P = "com.ulanzi.ulanzideck.claudedeck";
 // Heartbeat only refreshes time-based staleness; live switches come from the
 // filesystem watch below (near-instant), not this tick.
 const STALENESS_MS = 3000;
-// Animation frame rate for the "working" status spinner (~6fps).
-const ANIM_MS = 160;
+// Animation frame rate for the "working" status spinner (~10fps, 30°/frame).
+const ANIM_MS = 100;
 
 /** 308000 -> "308k", 1000000 -> "1M", 950 -> "950". */
 const fmtTok = (/** @type {number} */ n) => {
@@ -500,6 +501,9 @@ const EffortDial = defineAction({
 // Follow the terminal tab you focus (pin still wins). One-time macOS consent
 // ("UlanziDeck wants to control System Events") may appear on first run.
 startFocusFollower(APP);
+
+// Hook fast path: hooks pipe events here (~5ms) instead of spawning node (~55ms).
+startHookDaemon();
 
 definePlugin({
   uuid: P,

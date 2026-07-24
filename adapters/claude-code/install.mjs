@@ -13,8 +13,17 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const node = process.execPath;
 const statusline = resolve(HERE, "statusline.mjs");
 const hook = resolve(HERE, "hook.mjs");
-const cmd = (status) => `${node} ${hook} ${status}`;
 const MARK = "ulanzi-lab/claude-deck"; // marker to detect our own entries
+
+// Fast path: pipe the event to the deck plugin's unix socket (~5ms). Falls back
+// to the node script (~55ms spawn) when the plugin isn't running. Same logic
+// both ways (lib/hook-core.mjs). UserPromptSubmit stays on the node path — it
+// must be able to BLOCK the /session sentinel via exit code 2.
+const SLOW_EVENTS = new Set(["UserPromptSubmit"]);
+const cmd = (status, event) =>
+  SLOW_EVENTS.has(event)
+    ? `${node} ${hook} ${status}`
+    : `j=$(cat); printf '%s\\n%s' '${status}' "$j" | nc -U -w 1 "$HOME/.ulanzi-ai/hook.sock" 2>/dev/null || printf '%s' "$j" | ${node} ${hook} ${status}`;
 
 const SETTINGS = join(homedir(), ".claude", "settings.json");
 const apply = process.argv.includes("--apply");
@@ -29,8 +38,8 @@ const EVENTS = {
   PermissionRequest: "permission", // drives the contextual Allow/Always/Deny keys
 };
 
-function ourGroup(status) {
-  return { _source: MARK, hooks: [{ type: "command", command: cmd(status) }] };
+function ourGroup(status, event) {
+  return { _source: MARK, hooks: [{ type: "command", command: cmd(status, event) }] };
 }
 
 let settings = {};
@@ -52,12 +61,19 @@ if (!settings.statusLine) {
 settings.hooks = settings.hooks || {};
 for (const [event, status] of Object.entries(EVENTS)) {
   const arr = (settings.hooks[event] = settings.hooks[event] || []);
-  // Skip if our tagged group exists OR any group already runs our hook for this
-  // status (prevents duplicate groups when settings were hand-edited earlier).
-  const already = arr.some(
+  // Find our existing group (tagged, or a hand-wired one running our hook) and
+  // MIGRATE its command in place if it changed (e.g. slow path -> fast path);
+  // otherwise append. Never duplicates.
+  const mine = arr.find(
     (g) => g._source === MARK || (g.hooks || []).some((h) => (h.command || "").includes(`hook.mjs ${status}`))
   );
-  if (!already) arr.push(ourGroup(status));
+  const desired = cmd(status, event);
+  if (mine) {
+    mine._source = MARK;
+    mine.hooks = [{ type: "command", command: desired }];
+  } else {
+    arr.push(ourGroup(status, event));
+  }
 }
 
 const out = JSON.stringify(settings, null, 2);

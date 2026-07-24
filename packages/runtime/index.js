@@ -81,6 +81,8 @@ export class Button {
       this._loggedIcon = true;
       dbg("setIcon ctx=", this.context, "len=", dataUri?.length, "head=", String(dataUri).slice(0, 40));
     }
+    this._iconSeq = (this._iconSeq || 0) + 1; // press-echo restore guard
+    this._lastIcon = dataUri;
     this.$UD.setBaseDataIcon(this.context, dataUri, text);
   }
   setStateIcon(/** @type {number} */ i, /** @type {string} */ text) {
@@ -241,6 +243,24 @@ export function definePlugin(cfg) {
       // through a per-context guard so an action's run() fires exactly once —
       // critical for toggles like pin/unpin.
       rotateJournal();
+      // Instant press echo: repaint the key bright the moment it's pressed —
+      // firmware-style feedback — then restore the last face unless the action
+      // already redrew (tracked via the button's icon sequence counter).
+      const ECHO =
+        "data:image/svg+xml;base64," +
+        Buffer.from(
+          `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">` +
+            `<rect width="200" height="200" rx="24" fill="#d77757"/>` +
+            `<circle cx="100" cy="100" r="46" fill="none" stroke="rgba(0,0,0,0.35)" stroke-width="14"/></svg>`
+        ).toString("base64");
+      const pressEcho = (b) => {
+        const prev = b._lastIcon;
+        const seq = b._iconSeq || 0;
+        b.$UD.setBaseDataIcon(b.context, ECHO); // bypass setIcon: don't disturb seq/lastIcon
+        setTimeout(() => {
+          if ((b._iconSeq || 0) === seq && prev) b.$UD.setBaseDataIcon(b.context, prev);
+        }, 140);
+      };
       const lastRun = new Map();
       const fireRun = (d) => {
         const t = Date.now();
@@ -249,7 +269,9 @@ export function definePlugin(cfg) {
         const { uuid } = defFor(d.context);
         journal("press", uuid);
         dbg("press", uuid);
-        defFor(d.context).def?.run?.(ensure(d.context));
+        const b = ensure(d.context);
+        pressEcho(b);
+        defFor(d.context).def?.run?.(b);
       };
       $UD.onRun(fireRun);
       $UD.onKeyDown?.(fireRun);

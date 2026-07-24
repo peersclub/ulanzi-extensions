@@ -239,7 +239,7 @@ export function watchSessions(_app, onChange) {
   let rearm = null;
   const fire = () => {
     clearTimeout(debounce);
-    debounce = setTimeout(() => { try { onChange(); } catch {} }, 50);
+    debounce = setTimeout(() => { try { onChange(); } catch {} }, 25);
   };
   const arm = () => {
     try {
