@@ -85,15 +85,16 @@ export function startFocusFollower(app, opts = {}) {
       const [appName, ...rest] = String(stdout).trim().split("\n");
       const title = rest.join(" ").trim();
       if (!TERMINAL_APPS.has(appName)) { flog("frontmost not a terminal:", appName); return; }
-      if (title === lastTitle) return; // only react to actual tab/window changes
-      lastTitle = title;
       const live = liveSessions(app);
       const hit = matchSession(title, live);
-      flog("title:", JSON.stringify(title), "-> match:", hit ? hit.name : "none");
-      if (!hit || hit.sessionId === lastMatched) return;
+      if (title !== lastTitle) { lastTitle = title; flog("title:", JSON.stringify(title), "-> match:", hit ? hit.name : "none"); }
+      if (!hit) return;
       lastMatched = hit.sessionId;
-      if (getPin(app)) { flog("pinned, skip"); return; }
-      if (currentSession(app)?.sessionId === hit.sessionId) { flog("already current"); return; }
+      if (getPin(app)) return; // explicit pin always wins
+      // Re-assert on EVERY poll while focused (not just on change): background
+      // sessions bump their own activeTs as they work, so a one-shot bump lets
+      // them steal "current" back from the terminal you're actually looking at.
+      if (currentSession(app)?.sessionId === hit.sessionId) return;
       try {
         await writeSession(app, hit.sessionId, {}, { bumpActive: true });
         flog("SWITCHED ->", hit.name);

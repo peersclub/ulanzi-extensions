@@ -47,6 +47,20 @@ export async function processHookEvent(status, j) {
     return;
   }
 
+  // Notifications: only a real permission prompt is an interaction. Claude Code
+  // also fires periodic `idle_prompt` notifications for sessions just sitting
+  // there — treating those as interactions let IDLE sessions steal "current"
+  // from the terminal you're typing in. Idle reminders are heartbeats only:
+  // refresh liveness/metadata, never status/ask/activeTs.
+  if (status === "awaiting_input" && j?.notification_type && j.notification_type !== "permission_prompt") {
+    const hb = {};
+    if (j?.permission_mode) hb.mode = j.permission_mode;
+    if (j?.effort?.level) hb.effort = j.effort.level;
+    if (j?.cwd) hb.name = sessionName(j.cwd, sid);
+    if (sid) await writeSession(sid, hb, { bumpActive: false });
+    return;
+  }
+
   // Normal status stamping.
   const patch = { status };
   const tool = j?.tool_name || j?.tool?.name;
