@@ -8,6 +8,15 @@ The flagship plugin. UUID `com.ulanzi.ulanzideck.claudedeck`. Source in
 `plugins/claude-deck/`. Built on [[Package - runtime]] + [[Package - tiles]],
 fed by [[Adapter - Claude Code]] via the [[Broker Contract|broker]].
 
+> [!success] Curated to fully-functional (2026-07-24)
+> The action set was trimmed 30 → 23: removed Interrupt / static Approve+Deny /
+> Plan-mode toggle / Slash Command / Transcript Scroll / Always Allow — all
+> depended on keystroke tokens never verified on-device (escape, shift+tab,
+> arrows, down+enter) or a broken whole-string hotkey send. Every remaining
+> action uses a verified mechanism: broker-driven tiles, proven y/n keys,
+> clipboard ⌘V (Macro), settings.json writes (Effort Dial), openView (Dashboard).
+> They can return if/when their key tokens get calibrated ([[Open Questions]]).
+
 ## Actions
 
 ### Info tiles (poll broker ~1s while active)
