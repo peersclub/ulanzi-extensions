@@ -31,15 +31,24 @@ const OSA = `tell application "System Events"
     set winTitle to name of front window of p
   end try
 end tell
-set t to ""
-try
-  if appName is "Terminal" then
-    tell application "Terminal" to set t to tty of selected tab of front window
-  else if appName is "iTerm2" then
-    tell application "iTerm2" to set t to tty of current session of current window
-  end if
-end try
-return appName & linefeed & t & linefeed & winTitle`;
+return appName & linefeed & winTitle`;
+
+// App-specific tty probes, run ONLY when that app is frontmost. Kept separate
+// because AppleScript compiles tell-blocks against the app's dictionary — a
+// single script referencing a not-installed app fails to even parse.
+const TTY_SCRIPTS = {
+  Terminal: `tell application "Terminal" to tty of selected tab of front window`,
+  iTerm2: `tell application "iTerm2" to tty of current session of current window`,
+};
+
+const getTty = (appName) =>
+  new Promise((res) => {
+    const script = TTY_SCRIPTS[appName];
+    if (!script) return res("");
+    execFile("osascript", ["-e", script], { timeout: 3000 }, (err, out) =>
+      res(err ? "" : String(out).trim().replace(/^\/dev\//, ""))
+    );
+  });
 
 /** Frontmost apps whose window title we trust to identify a terminal tab. */
 const TERMINAL_APPS = new Set([
@@ -90,13 +99,13 @@ export function startFocusFollower(app, opts = {}) {
     execFile("osascript", ["-e", OSA], { timeout: 3000 }, async (err, stdout) => {
       busy = false;
       if (err) { flog("osascript ERROR (permission?):", String(err.message || err).slice(0, 120)); return; }
-      const [appName, ttyLine, ...rest] = String(stdout).trim().split("\n");
+      const [appName, ...rest] = String(stdout).trim().split("\n");
       const title = rest.join(" ").trim();
       if (!TERMINAL_APPS.has(appName)) { flog("frontmost not a terminal:", appName); return; }
       const live = liveSessions(app);
       // Exact match by tty first (Claude renames tab titles to topic slugs, so
       // titles are unreliable); title heuristics only as fallback.
-      const ftty = (ttyLine || "").trim().replace(/^\/dev\//, "");
+      const ftty = await getTty(appName);
       const byTty = ftty && live.find((s) => s.tty === ftty);
       const hit = byTty || matchSession(title, live);
       if (title !== lastTitle) {

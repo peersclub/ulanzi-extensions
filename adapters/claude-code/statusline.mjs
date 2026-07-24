@@ -11,11 +11,19 @@ import { contextFromTranscript } from "./lib/context.mjs";
 
 const j = await readStdinJson();
 
-// This process is a child of the Claude session → same controlling terminal.
-// Recording the tty lets the deck match the FOCUSED terminal tab exactly
-// (Claude renames tab titles to topic slugs, so title matching is unreliable).
+// Record which terminal (tty) this session lives on, so the deck can match the
+// FOCUSED tab exactly (Claude renames tab titles to topic slugs, so title
+// matching is unreliable). Claude spawns us detached (tty "??"), but the claude
+// TUI itself owns the tty — walk up the parent chain until we find it.
 let tty = "";
-try { tty = execSync(`ps -o tty= -p ${process.pid}`).toString().trim(); } catch {}
+try {
+  let p = process.pid;
+  for (let i = 0; i < 6 && p > 1; i++) {
+    const t = execSync(`ps -o tty= -p ${p}`).toString().trim();
+    if (t && t !== "??") { tty = t; break; }
+    p = parseInt(execSync(`ps -o ppid= -p ${p}`).toString().trim(), 10) || 0;
+  }
+} catch {}
 
 const model = j?.model?.display_name || j?.model?.id || "";
 const cwd = j?.workspace?.current_dir || j?.cwd || "";
