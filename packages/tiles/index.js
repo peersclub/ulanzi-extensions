@@ -300,15 +300,35 @@ export function PlanStepTile({ index = 0, total = 0, text = "" }) {
  * around the center). Used for brand faces; the animated variant lives in gif.js.
  * @param {{cx?:number, cy?:number, r?:number, color?:string}} [o]
  */
-export function claudeBurst({ cx = SIZE / 2, cy = SIZE / 2, r = 62, color = palette.accent, weight = 0.15 } = {}) {
-  const rays = [];
-  for (let k = 0; k < 12; k++) {
-    rays.push(
-      `<rect x="${cx - (r * weight) / 2}" y="${cy - r}" width="${r * weight}" height="${r * 0.62}" rx="${(r * weight) / 2}" ` +
-        `fill="${color}" transform="rotate(${k * 30} ${cx} ${cy})"/>`
-    );
+/** The pixel-Claude mascot grid (as used across Claude Code branding). */
+export const CLAUDE_GRID = [
+  "..XXXXXXXX..",
+  "..XXXXXXXX..",
+  "..X.XXXX.X..",
+  "..X.XXXX.X..",
+  "XXXXXXXXXXXX",
+  "XXXXXXXXXXXX",
+  ".X..X..X..X.",
+  ".X..X..X..X.",
+];
+
+export function claudeBurst({ cx = SIZE / 2, cy = SIZE / 2, r = 62, color = palette.accent } = {}) {
+  // Kept name for compat; renders the REAL mark — the pixel Claude creature.
+  const cols = CLAUDE_GRID[0].length;
+  const rows = CLAUDE_GRID.length;
+  const width = r * 2;
+  const cell = width / cols;
+  const x0 = cx - width / 2;
+  const y0 = cy - (rows * cell) / 2;
+  let rects = "";
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (CLAUDE_GRID[row][col] === "X") {
+        rects += `<rect x="${(x0 + col * cell).toFixed(2)}" y="${(y0 + row * cell).toFixed(2)}" width="${(cell + 0.5).toFixed(2)}" height="${(cell + 0.5).toFixed(2)}" fill="${color}"/>`;
+      }
+    }
   }
-  return rays.join("");
+  return rects;
 }
 
 /**

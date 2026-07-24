@@ -143,45 +143,56 @@ export function pulseGif(color, size = 96, frames = 10) {
   return encodeGif(size, size, out, pal, 9);
 }
 
+/** The pixel-Claude mascot grid (same mark used across Claude Code branding). */
+const CLAUDE_GRID = [
+  "..XXXXXXXX..",
+  "..XXXXXXXX..",
+  "..X.XXXX.X..",
+  "..X.XXXX.X..",
+  "XXXXXXXXXXXX",
+  "XXXXXXXXXXXX",
+  ".X..X..X..X.",
+  ".X..X..X..X.",
+];
+
 /**
- * Claude starburst, animated. The logo shape: 12 rays converging on a hollow
- * center. mode "spin" rotates one ray-period per loop; "pulse" breathes scale.
- * Drawn with pixel math (angle to nearest ray axis, arc-width ~constant so
- * rays taper outward like the real mark).
+ * The pixel Claude, alive. "pulse" breathes (scale), "spin" bounces on its
+ * legs (the walking-creature feel). Kept the old mode names so call sites
+ * didn't change.
  * @param {string} color hex "#rrggbb"
  * @param {{mode?: "spin"|"pulse", size?: number, frames?: number}} [opts]
  */
-export function claudeBurstGif(color, { mode = "spin", size = 96, frames = 12 } = {}) {
+export function claudeBurstGif(color, { mode = "pulse", size = 96, frames = 12 } = {}) {
   const pal = shades(color);
-  const c = size / 2;
-  const RAYS = 12;
-  const STEP = (Math.PI * 2) / RAYS;
+  const cols = CLAUDE_GRID[0].length;
+  const rows = CLAUDE_GRID.length;
   const out = [];
   for (let f = 0; f < frames; f++) {
-    const phase = mode === "spin" ? (f / frames) * STEP : 0;
-    const scale = mode === "pulse" ? 0.82 + 0.18 * Math.sin((f / frames) * Math.PI * 2) : 1;
-    const rIn = size * 0.11 * scale;
-    const rOut = size * 0.46 * scale;
-    const halfArc = size * 0.045; // constant arc half-width -> tapered rays
+    const t = (f / frames) * Math.PI * 2;
+    const scale = mode === "pulse" ? 0.86 + 0.14 * Math.sin(t) : 1;
+    const bounce = mode === "spin" ? Math.round(Math.abs(Math.sin(t)) * -size * 0.06) : 0;
+    const width = size * 0.78 * scale;
+    const cell = width / cols;
+    const x0 = (size - width) / 2;
+    const y0 = (size - rows * cell) / 2 + bounce;
     const px = new Array(size * size).fill(0);
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        const dx = x - c, dy = y - c;
-        const r = Math.hypot(dx, dy);
-        if (r < rIn || r > rOut) continue;
-        let a = Math.atan2(dy, dx) - phase;
-        a = ((a % STEP) + STEP) % STEP;
-        const d = Math.min(a, STEP - a) * r; // arc distance to nearest ray axis
-        if (d < halfArc) {
-          // brighter toward the center, like the inked mark
-          const shade = 7 - Math.min(3, Math.floor(((r - rIn) / (rOut - rIn)) * 3));
-          px[y * size + x] = shade;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (CLAUDE_GRID[r][c] !== "X") continue;
+        const xs = Math.round(x0 + c * cell);
+        const ys = Math.round(y0 + r * cell);
+        const s = Math.ceil(cell);
+        for (let y = ys; y < ys + s && y < size; y++) {
+          if (y < 0) continue;
+          for (let x = xs; x < xs + s && x < size; x++) {
+            if (x >= 0) px[y * size + x] = 7;
+          }
         }
       }
     }
     out.push(px);
   }
-  return encodeGif(size, size, out, pal, mode === "spin" ? 8 : 9);
+  return encodeGif(size, size, out, pal, mode === "spin" ? 7 : 9);
 }
 
 /** As a data URI for setGifDataIcon. */

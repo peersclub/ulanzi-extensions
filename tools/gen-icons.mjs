@@ -30,6 +30,36 @@ const glyph = (t, color, size = 78, y = 96) =>
 const contextualBar = `<rect x="24" y="122" width="96" height="10" rx="5" fill="${C.warn}"/>`;
 const dialArc = `<path d="M 40 126 A 40 40 0 0 1 104 126" fill="none" stroke="${C.dim}" stroke-width="8" stroke-linecap="round"/>`;
 
+/** The pixel-Claude mascot (the real mark, as used in Claude Code branding). */
+const CLAUDE_GRID = [
+  "..XXXXXXXX..",
+  "..XXXXXXXX..",
+  "..X.XXXX.X..",
+  "..X.XXXX.X..",
+  "XXXXXXXXXXXX",
+  "XXXXXXXXXXXX",
+  ".X..X..X..X.",
+  ".X..X..X..X.",
+];
+function claudeBurst(cx, cy, r, color) {
+  const cols = CLAUDE_GRID[0].length;
+  const rows = CLAUDE_GRID.length;
+  const width = r * 2;
+  const cell = width / cols;
+  const x0 = cx - width / 2;
+  const y0 = cy - (rows * cell) / 2;
+  let rects = "";
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (CLAUDE_GRID[row][col] === "X") {
+        rects += `<rect x="${(x0 + col * cell).toFixed(2)}" y="${(y0 + row * cell).toFixed(2)}" width="${(cell + 0.5).toFixed(2)}" height="${(cell + 0.5).toFixed(2)}" fill="${color}"/>`;
+      }
+    }
+  }
+  return rects;
+}
+
+
 /** Custom shape bodies (things a glyph can't say). */
 const shapes = {
   gauge: `<rect x="24" y="60" width="96" height="22" rx="11" fill="${C.track}"/><rect x="24" y="60" width="62" height="22" rx="11" fill="${C.good}"/>`,
@@ -49,18 +79,6 @@ const shapes = {
   deckLogo: claudeBurst(72, 72, 58, C.accent),
   beaconBurst: claudeBurst(72, 72, 52, C.warn),
 };
-
-/** Claude starburst: 12 tapered rays rotated around the center. */
-function claudeBurst(cx, cy, r, color) {
-  const rays = [];
-  for (let k = 0; k < 12; k++) {
-    rays.push(
-      `<rect x="${cx - r * 0.075}" y="${cy - r}" width="${r * 0.15}" height="${r * 0.62}" rx="${r * 0.075}" ` +
-        `fill="${color}" transform="rotate(${k * 30} ${cx} ${cy})"/>`
-    );
-  }
-  return rays.join("");
-}
 
 /** Command-key icon: the literal command text, sized to fit, purple family. */
 function cmdIcon(cmd) {
