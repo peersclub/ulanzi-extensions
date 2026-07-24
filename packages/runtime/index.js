@@ -302,6 +302,12 @@ export function definePlugin(cfg) {
       const bye = () => { for (const c of [...buttons.keys()]) dispose(c); process.exit(0); };
       process.on("SIGINT", bye);
       process.on("SIGTERM", bye);
+      // Last-resort crash guards: a stray exception or unhandled rejection in a
+      // timer/watcher/callback must never take the whole deck down — log it and
+      // keep serving. (Observed: an early WS 'error' with no listener killed
+      // the plugin at spawn; this covers every remaining path.)
+      process.on("uncaughtException", (e) => { dbg("UNCAUGHT:", e?.stack || String(e)); log("uncaught:", e?.message); });
+      process.on("unhandledRejection", (e) => { dbg("UNHANDLED REJECTION:", /** @type {any} */ (e)?.stack || String(e)); });
       return this;
     },
   };

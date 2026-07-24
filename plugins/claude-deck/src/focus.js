@@ -15,7 +15,15 @@ import { execFile } from "node:child_process";
 import { appendFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { userInfo, homedir } from "node:os";
-import { liveSessions, currentSession, getPin, clearPin, writeSession } from "@ulanzi-lab/broker";
+import { listSessions, currentSession, getPin, clearPin, writeSession } from "@ulanzi-lab/broker";
+
+// Focus candidates use a WIDE window (2h), not the 5-min "live" set: an idle
+// terminal stops writing and would silently become unswitchable. tty matching
+// is exact so staleness can't false-positive — and the switch bump itself
+// revives the session's liveness.
+const FOCUS_WINDOW_MS = 2 * 60 * 60 * 1000;
+/** Keepalive cadence for the session whose tab you're sitting on. */
+const KEEPALIVE_MS = 60_000;
 
 const FDBG = !!process.env.ULANZI_DEBUG;
 const flog = (...a) => {
@@ -92,52 +100,66 @@ export function startFocusFollower(app, opts = {}) {
   const interval = opts.intervalMs ?? 800;
   let lastTitle = "";
   let lastMatched = "";
+  let lastKeepalive = 0;
   let busy = false;
   const tick = () => {
     if (busy) return;
     busy = true;
     execFile("osascript", ["-e", OSA], { timeout: 3000 }, async (err, stdout) => {
       busy = false;
-      if (err) { flog("osascript ERROR (permission?):", String(err.message || err).slice(0, 120)); return; }
-      const [appName, ...rest] = String(stdout).trim().split("\n");
-      const title = rest.join(" ").trim();
-      if (!TERMINAL_APPS.has(appName)) { flog("frontmost not a terminal:", appName); return; }
-      const live = liveSessions(app);
-      // Exact match by tty first (Claude renames tab titles to topic slugs, so
-      // titles are unreliable); title heuristics only as fallback.
-      const ftty = await getTty(appName);
-      const byTty = ftty && live.find((s) => s.tty === ftty);
-      const hit = byTty || matchSession(title, live);
-      if (title !== lastTitle) {
-        lastTitle = title;
-        flog("tty:", ftty || "-", "title:", JSON.stringify(title.slice(0, 60)), "-> match:", hit ? `${hit.name}${byTty ? " (tty)" : " (title)"}` : "none");
-      }
-      if (!hit) return;
-      const arrived = hit.sessionId !== lastMatched; // transitioned to a different session's tab
-      lastMatched = hit.sessionId;
-      const pin = getPin(app);
-      if (pin) {
-        // Pin semantics: "show that session until I return to it." ARRIVING at
-        // the pinned session's own tab releases the pin (normal follow resumes);
-        // sitting on it or working elsewhere leaves the pin alone. This also
-        // dissolves the accidental-pin trap (a stray slot/knob press otherwise
-        // silently froze tab-following).
-        if (arrived && pin.sessionId === hit.sessionId) {
-          await clearPin(app);
-          flog("pin auto-released (returned to pinned session)");
-        } else {
-          return; // pin still in force
-        }
-      }
-      // Re-assert on EVERY poll while focused (not just on change): background
-      // sessions bump their own activeTs as they work, so a one-shot bump lets
-      // them steal "current" back from the terminal you're actually looking at.
-      if (currentSession(app)?.sessionId === hit.sessionId) return;
       try {
+        // The whole body is guarded: an exception here must NEVER kill the
+        // plugin process (an unhandled rejection in this callback would).
+        if (err) { flog("osascript ERROR (permission?):", String(err.message || err).slice(0, 120)); return; }
+        const [appName, ...rest] = String(stdout).trim().split("\n");
+        const title = rest.join(" ").trim();
+        if (!TERMINAL_APPS.has(appName)) return;
+        const now = Date.now();
+        const candidates = listSessions(app).filter((s) => now - (s.ts || 0) < FOCUS_WINDOW_MS);
+        // Exact match by tty first; when several sessions share a tty (restarts
+        // in the same terminal), the most recent writer is the living one.
+        const ftty = await getTty(appName);
+        const byTty = ftty
+          ? candidates.filter((s) => s.tty === ftty).sort((a, b) => (b.ts || 0) - (a.ts || 0))[0]
+          : null;
+        const hit = byTty || matchSession(title, candidates);
+        if (title !== lastTitle) {
+          lastTitle = title;
+          flog("tty:", ftty || "-", "title:", JSON.stringify(title.slice(0, 60)), "-> match:", hit ? `${hit.name}${byTty ? " (tty)" : " (title)"}` : "none");
+        }
+        if (!hit) return;
+        const arrived = hit.sessionId !== lastMatched; // transitioned to a different session's tab
+        lastMatched = hit.sessionId;
+        const pin = getPin(app);
+        if (pin) {
+          // Pin semantics: "show that session until I return to it." Arriving at
+          // the pinned session's own tab releases the pin; sitting on it or
+          // working elsewhere leaves it in force.
+          if (arrived && pin.sessionId === hit.sessionId) {
+            await clearPin(app);
+            flog("pin auto-released (returned to pinned session)");
+          } else {
+            return;
+          }
+        }
+        if (currentSession(app)?.sessionId === hit.sessionId) {
+          // Sitting on the current session's tab: keep it alive so the deck
+          // never goes stale-dim under your eyes (max one write per minute).
+          if (now - (hit.ts || 0) > KEEPALIVE_MS && now - lastKeepalive > KEEPALIVE_MS) {
+            lastKeepalive = now;
+            await writeSession(app, hit.sessionId, {}, { bumpActive: false });
+            flog("keepalive ->", hit.name);
+          }
+          return;
+        }
+        // Re-assert on EVERY poll while focused: the switch bump also revives a
+        // session that had gone quiet (its ts refreshes -> back in the live set).
         await writeSession(app, hit.sessionId, {}, { bumpActive: true });
         flog("SWITCHED ->", hit.name);
         opts.onSwitch?.(hit);
-      } catch (e) { flog("write err:", String(e)); }
+      } catch (e) {
+        flog("tick err:", String(e && e.message || e));
+      }
     });
   };
   const t = setInterval(tick, interval);
