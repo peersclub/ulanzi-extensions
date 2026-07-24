@@ -198,8 +198,14 @@ export function definePlugin(cfg) {
       // throws and the whole plugin crashes. Studio can spawn us before its
       // bridge is ready, so we must survive a failed connect and retry.
       let reconnectT = null;
+      let reconnectTries = 0;
       const scheduleReconnect = () => {
         if (reconnectT) return;
+        // Orphan guard: if Studio is gone for ~1 minute, EXIT instead of
+        // reconnecting forever. A killed/restarted Studio spawns a fresh
+        // instance; immortal orphans otherwise pile up and fight over the keys
+        // (observed: five instances overwriting each other's tiles).
+        if (++reconnectTries > 40) { dbg("giving up after", reconnectTries, "reconnects — exiting"); process.exit(0); }
         reconnectT = setTimeout(() => {
           reconnectT = null;
           dbg("reconnecting");
@@ -210,7 +216,7 @@ export function definePlugin(cfg) {
 
       $UD.connect(cfg.uuid);
       dbg("connect", cfg.uuid, "actions:", [...byUuid.keys()].join(","));
-      $UD.onConnected(() => { log("connected"); dbg("connected"); cfg.onReady?.(); });
+      $UD.onConnected(() => { reconnectTries = 0; log("connected"); dbg("connected"); cfg.onReady?.(); });
 
       $UD.onAdd((d) => {
         const { uuid, def } = defFor(d.context);
