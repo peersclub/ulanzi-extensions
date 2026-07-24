@@ -362,6 +362,126 @@
       "Controllers": [
         "Encoder"
       ]
+    },
+    {
+      "Name": "/compact",
+      "Tooltip": "Press to send /compact to the focused terminal. Compact the conversation (context hygiene)",
+      "Icon": "resources/actions/cmdcompact.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cmdcompact",
+      "States": [
+        {
+          "Image": "resources/actions/cmdcompact.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "/clear",
+      "Tooltip": "Press to send /clear to the focused terminal. Clear the conversation",
+      "Icon": "resources/actions/cmdclear.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cmdclear",
+      "States": [
+        {
+          "Image": "resources/actions/cmdclear.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "/context",
+      "Tooltip": "Press to send /context to the focused terminal. Show context-window breakdown",
+      "Icon": "resources/actions/cmdcontext.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cmdcontext",
+      "States": [
+        {
+          "Image": "resources/actions/cmdcontext.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "/cost",
+      "Tooltip": "Press to send /cost to the focused terminal. Show token/cost usage",
+      "Icon": "resources/actions/cmdcost.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cmdcost",
+      "States": [
+        {
+          "Image": "resources/actions/cmdcost.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "/resume",
+      "Tooltip": "Press to send /resume to the focused terminal. Open the session picker",
+      "Icon": "resources/actions/cmdresume.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cmdresume",
+      "States": [
+        {
+          "Image": "resources/actions/cmdresume.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "/model",
+      "Tooltip": "Press to send /model to the focused terminal. Open the model picker",
+      "Icon": "resources/actions/cmdmodel.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cmdmodel",
+      "States": [
+        {
+          "Image": "resources/actions/cmdmodel.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "/AIUse",
+      "Tooltip": "Press to send /AIUse to the focused terminal. Run your AI-usage report (custom command)",
+      "Icon": "resources/actions/cmdusage.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cmdusage",
+      "States": [
+        {
+          "Image": "resources/actions/cmdusage.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "/switch-account",
+      "Tooltip": "Press to send /switch-account to the focused terminal. Switch Claude Code account (custom command)",
+      "Icon": "resources/actions/cmdswitch.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cmdswitch",
+      "States": [
+        {
+          "Image": "resources/actions/cmdswitch.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
     }
   ]
 }

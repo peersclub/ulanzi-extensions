@@ -10,7 +10,7 @@ let lastSent = null;
 
 const uuid = Utils.getQueryParams("uuid") || "";
 const isSlot = uuid.endsWith(".slot");
-const isMacro = uuid.endsWith(".macro");
+const isMacro = uuid.endsWith(".macro") || /\.cmd[a-z]+$/.test(uuid);
 const INFO = ["model", "context", "status", "name", "mode", "session", "lines", "planhero", "cost", "tokens", "trend", "costtrend", "dashboard", "beacon"];
 const isInfo = INFO.some((s) => uuid.endsWith("." + s));
 
@@ -28,6 +28,14 @@ const DEFAULTS = {
   planreject: { keylist: "n" },
   slot: { slot: "1" },
   macro: { command: "/compact", keylist: "⌘V enter" },
+  cmdcompact: { command: "/compact", keylist: "⌘V enter" },
+  cmdclear: { command: "/clear", keylist: "⌘V enter" },
+  cmdcontext: { command: "/context", keylist: "⌘V enter" },
+  cmdcost: { command: "/cost", keylist: "⌘V enter" },
+  cmdresume: { command: "/resume", keylist: "⌘V enter" },
+  cmdmodel: { command: "/model", keylist: "⌘V enter" },
+  cmdusage: { command: "/AIUse", keylist: "⌘V enter" },
+  cmdswitch: { command: "/switch-account", keylist: "⌘V enter" },
 }[key] || {};
 
 // Fill any still-empty field with its default, then persist once so the value

@@ -49,6 +49,16 @@ const shapes = {
   deckLogo: `<rect x="26" y="26" width="42" height="42" rx="10" fill="${C.accent}"/><rect x="76" y="26" width="42" height="42" rx="10" fill="${C.accent}" opacity="0.75"/><rect x="26" y="76" width="42" height="42" rx="10" fill="${C.accent}" opacity="0.55"/><rect x="76" y="76" width="42" height="42" rx="10" fill="${C.accent}" opacity="0.35"/>`,
 };
 
+/** Command-key icon: the literal command text, sized to fit, purple family. */
+function cmdIcon(cmd) {
+  const size = Math.max(18, Math.min(30, Math.floor(120 / (cmd.length * 0.6))));
+  return (
+    `<rect x="18" y="52" width="108" height="44" rx="12" fill="${C.track}"/>` +
+    `<text x="72" y="82" font-family="Menlo,monospace" font-size="${size}" font-weight="700" text-anchor="middle" fill="${C.plan}">${cmd}</text>` +
+    `<text x="72" y="126" font-family="-apple-system" font-size="20" font-weight="700" text-anchor="middle" fill="${C.dim}">SEND</text>`
+  );
+}
+
 /** name → { body | glyph, color, contextual?, dial? } */
 const ICONS = {
   plugin: { body: shapes.deckLogo },
@@ -74,6 +84,14 @@ const ICONS = {
   slot: { body: shapes.slot },
   fleetdial: { body: shapes.fleet, dial: true },
   macro: { glyph: ["⌘", C.plan] },
+  cmdcompact: { body: cmdIcon("/compact") },
+  cmdclear: { body: cmdIcon("/clear") },
+  cmdcontext: { body: cmdIcon("/context") },
+  cmdcost: { body: cmdIcon("/cost") },
+  cmdresume: { body: cmdIcon("/resume") },
+  cmdmodel: { body: cmdIcon("/model") },
+  cmdusage: { body: cmdIcon("/AIUse") },
+  cmdswitch: { body: cmdIcon("/switch") },
   allow: { glyph: ["✓", C.good], contextual: true },
   alwaysallow: { glyph: ["✓✓", C.info, 56, 88], contextual: true },
   reject: { glyph: ["✕", C.crit], contextual: true },

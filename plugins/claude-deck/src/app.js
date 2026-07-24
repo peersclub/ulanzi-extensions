@@ -370,31 +370,44 @@ const FleetDial = defineAction({
 });
 
 /**
- * Macro key: inject a full command into the focused terminal via clipboard
- * paste — pbcopy, then ⌘V (documented Mac modifier format), then enter. All
- * keystrokes PI-overridable (`keylist`, space-separated) for calibration.
+ * Macro keys: inject a command into the focused terminal via clipboard paste —
+ * pbcopy, then ⌘V (documented Mac modifier format), then enter. Keystrokes and
+ * the command are PI-overridable per key. `macroAction` powers both the generic
+ * Macro key and the preset command row (/compact, /clear, /cost, ...).
+ * @param {string} uuid @param {string} defaultCmd @param {string} [glyph]
  */
-const Macro = defineAction({
-  uuid: `${P}.macro`,
-  active(b) {
-    const cmd = b.settings.command || "/compact";
-    b.setIcon(ActionTile({ glyph: "⌘", caption: cmd.slice(0, 12), accent: palette.plan }));
-  },
-  settings(b) {
-    const cmd = b.settings.command || "/compact";
-    b.setIcon(ActionTile({ glyph: "⌘", caption: cmd.slice(0, 12), accent: palette.plan }));
-  },
-  run(b) {
-    const cmd = b.settings.command || "/compact";
-    const p = execFile("pbcopy");
-    p.stdin.end(cmd);
-    p.on("close", () => {
-      const keys = (b.settings.keylist || "⌘V enter").trim().split(/\s+/);
-      keys.forEach((k, i) => setTimeout(() => b.hotkey(k), 120 + i * 120));
-    });
-    b.toast(`Sent ${cmd}`);
-  },
-});
+function macroAction(uuid, defaultCmd, glyph = "⌘") {
+  const face = (b) => {
+    const cmd = b.settings.command || defaultCmd;
+    b.setIcon(ActionTile({ glyph, caption: cmd.replace(/^\//, "").slice(0, 12), accent: palette.plan, sub: "sends" }));
+  };
+  return defineAction({
+    uuid,
+    active: face,
+    settings: face,
+    run(b) {
+      const cmd = b.settings.command || defaultCmd;
+      const p = execFile("pbcopy");
+      p.stdin.end(cmd);
+      p.on("close", () => {
+        const keys = (b.settings.keylist || "⌘V enter").trim().split(/\s+/);
+        keys.forEach((k, i) => setTimeout(() => b.hotkey(k), 120 + i * 120));
+      });
+      b.toast(`Sent ${cmd}`);
+    },
+  });
+}
+
+const Macro = macroAction(`${P}.macro`, "/compact");
+// Preset command row — built-ins + this machine's custom commands.
+const CmdCompact = macroAction(`${P}.cmdcompact`, "/compact", "🗜");
+const CmdClear = macroAction(`${P}.cmdclear`, "/clear", "🧹");
+const CmdContext = macroAction(`${P}.cmdcontext`, "/context", "◔");
+const CmdCost = macroAction(`${P}.cmdcost`, "/cost", "$");
+const CmdResume = macroAction(`${P}.cmdresume`, "/resume", "↻");
+const CmdModel = macroAction(`${P}.cmdmodel`, "/model", "◈");
+const CmdUsage = macroAction(`${P}.cmdusage`, "/AIUse", "Σ");
+const CmdSwitch = macroAction(`${P}.cmdswitch`, "/switch-account", "👤");
 
 // --- Dashboard, Beacon, Effort dial -------------------------------------------
 
@@ -513,5 +526,6 @@ definePlugin({
     Allow, Reject,
     PlanApprove, PlanReject, PlanHero, PlanScroll,
     Slot, FleetDial, Macro,
+    CmdCompact, CmdClear, CmdContext, CmdCost, CmdResume, CmdModel, CmdUsage, CmdSwitch,
   ],
 }).start();
