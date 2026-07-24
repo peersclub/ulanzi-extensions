@@ -39,3 +39,18 @@ node adapters/claude-code/install.mjs --apply
 
 The installer only sets `statusLine` if you don't already have one, and tags its
 hook entries so re-running never duplicates them.
+
+## ⚠ Restart existing sessions after installing
+
+Claude Code reads `statusLine` and hooks at **launch**, so sessions that were
+already running when you installed the adapter **won't report** to the deck —
+they're invisible on the fleet/dashboard and to focus-follow. Fix: exit and
+relaunch `claude` (or `claude --continue`) in those terminals. New sessions
+appear instantly.
+
+## Session visibility
+
+The deck only knows a session while it's writing. An **idle, unfocused** session
+eventually goes quiet and drops off (no "still open" heartbeat exists in Claude
+Code) — re-touching or focusing it brings it back. The dashboard uses a 2h
+window to keep recently-idle sessions visible with their last-write age.
