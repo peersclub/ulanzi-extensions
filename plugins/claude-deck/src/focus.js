@@ -15,7 +15,7 @@ import { execFile } from "node:child_process";
 import { appendFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { userInfo, homedir } from "node:os";
-import { liveSessions, currentSession, getPin, writeSession } from "@ulanzi-lab/broker";
+import { liveSessions, currentSession, getPin, clearPin, writeSession } from "@ulanzi-lab/broker";
 
 const FDBG = !!process.env.ULANZI_DEBUG;
 const flog = (...a) => {
@@ -113,8 +113,22 @@ export function startFocusFollower(app, opts = {}) {
         flog("tty:", ftty || "-", "title:", JSON.stringify(title.slice(0, 60)), "-> match:", hit ? `${hit.name}${byTty ? " (tty)" : " (title)"}` : "none");
       }
       if (!hit) return;
+      const arrived = hit.sessionId !== lastMatched; // transitioned to a different session's tab
       lastMatched = hit.sessionId;
-      if (getPin(app)) return; // explicit pin always wins
+      const pin = getPin(app);
+      if (pin) {
+        // Pin semantics: "show that session until I return to it." ARRIVING at
+        // the pinned session's own tab releases the pin (normal follow resumes);
+        // sitting on it or working elsewhere leaves the pin alone. This also
+        // dissolves the accidental-pin trap (a stray slot/knob press otherwise
+        // silently froze tab-following).
+        if (arrived && pin.sessionId === hit.sessionId) {
+          await clearPin(app);
+          flog("pin auto-released (returned to pinned session)");
+        } else {
+          return; // pin still in force
+        }
+      }
       // Re-assert on EVERY poll while focused (not just on change): background
       // sessions bump their own activeTs as they work, so a one-shot bump lets
       // them steal "current" back from the terminal you're actually looking at.
