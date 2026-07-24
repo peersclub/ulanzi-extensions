@@ -1,0 +1,6 @@
+{
+  "cover": "resources/cover.png",
+  "longDescription": "Turn your Ulanzi D200X into a control surface for Claude Code — inspired by OpenAI's Codex Micro.\n\n**Fleet view:** one key per live Claude session, color-coded (blue working, amber needs you, green unread result, red error). Press a slot to pin the whole deck to that session.\n\n**Live tiles:** model, context % gauge, animated status, session cost, token counter, trend sparklines, permission mode, session timer, lines changed.\n\n**Control:** contextual Allow/Deny keys that light up on permission prompts, plan-approval keys with dial-through-plan review, a command palette dial (/compact, /clear, /cost, ...), an effort dial, and a popup dashboard of all sessions.\n\n**Follows you:** the deck automatically tracks whichever terminal tab you're working in (exact tty matching).\n\nSetup: unzip, then run the bundled adapter installer once (INSTALL.md inside the zip). Requires macOS 12+, Claude Code, Node 20+.",
+  "deviceTypes": ["deck", "dial"],
+  "tags": ["claude", "ai", "developer", "productivity", "agents"]
+}

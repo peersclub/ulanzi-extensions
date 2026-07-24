@@ -1,0 +1,489 @@
+{
+  "UUID": "com.ulanzi.ulanzideck.claudedeck",
+  "Name": "Claude Deck",
+  "Description": "Live Claude Code session activity + two-way control on your Ulanzi D200X. Shows model, context %, and a status light (thinking / awaiting input / done), plus control keys (interrupt, approve, deny, /compact, /clear, plan mode, custom slash command) and encoder dials. Complements the Claude Code Usage and AI Cost plugins. Reads live state from a local broker written by the claude-code adapter.",
+  "Author": "ulanzi-lab",
+  "Version": "1.0.0",
+  "Icon": "resources/plugin.png",
+  "Category": "Claude Deck",
+  "CategoryIcon": "resources/category.png",
+  "CodePath": "dist/app.js",
+  "Type": "JavaScript",
+  "PrivateAPI": true,
+  "SupportedInMultiActions": false,
+  "OS": [
+    {
+      "Platform": "mac",
+      "MinimumVersion": "12.0"
+    }
+  ],
+  "Software": {
+    "MinimumVersion": "3.0.11"
+  },
+  "Actions": [
+    {
+      "Name": "Model",
+      "Tooltip": "Current Claude model + context %",
+      "Icon": "resources/actions/model.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.model",
+      "States": [
+        {
+          "Image": "resources/actions/model.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
+    },
+    {
+      "Name": "Context %",
+      "Tooltip": "Context window used",
+      "Icon": "resources/actions/context.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.context",
+      "States": [
+        {
+          "Image": "resources/actions/context.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
+    },
+    {
+      "Name": "Status",
+      "Tooltip": "Live session status: thinking / awaiting input / done",
+      "Icon": "resources/actions/status.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.status",
+      "States": [
+        {
+          "Image": "resources/actions/status.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
+    },
+    {
+      "Name": "Permission Mode",
+      "Tooltip": "Whether this session auto-approves (AUTO/BYPASS) or asks (ASK) — why it does/doesn't prompt",
+      "Icon": "resources/actions/mode.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.mode",
+      "States": [
+        {
+          "Image": "resources/actions/mode.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
+    },
+    {
+      "Name": "Session Name",
+      "Tooltip": "Which terminal/session the deck is following (+ live count)",
+      "Icon": "resources/actions/name.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.name",
+      "States": [
+        {
+          "Image": "resources/actions/name.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
+    },
+    {
+      "Name": "Session Timer",
+      "Tooltip": "Elapsed time of the current session",
+      "Icon": "resources/actions/session.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.session",
+      "States": [
+        {
+          "Image": "resources/actions/session.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
+    },
+    {
+      "Name": "Lines Changed",
+      "Tooltip": "Net lines changed this session",
+      "Icon": "resources/actions/lines.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.lines",
+      "States": [
+        {
+          "Image": "resources/actions/lines.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
+    },
+    {
+      "Name": "Allow",
+      "Tooltip": "Contextual: allow the current permission prompt (dim when none)",
+      "Icon": "resources/actions/allow.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.allow",
+      "States": [
+        {
+          "Image": "resources/actions/allow.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "Deny (prompt)",
+      "Tooltip": "Contextual: deny the current permission prompt (dim when none)",
+      "Icon": "resources/actions/reject.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.reject",
+      "States": [
+        {
+          "Image": "resources/actions/reject.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "Session Cost",
+      "Tooltip": "Live USD cost of the current session (green < $3, amber < $10, red above)",
+      "Icon": "resources/actions/cost.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cost",
+      "States": [
+        {
+          "Image": "resources/actions/cost.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
+    },
+    {
+      "Name": "Token Counter",
+      "Tooltip": "Raw context-window tokens in use / window size (e.g. 308k of 1M)",
+      "Icon": "resources/actions/tokens.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.tokens",
+      "States": [
+        {
+          "Image": "resources/actions/tokens.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
+    },
+    {
+      "Name": "Context Trend",
+      "Tooltip": "Sparkline of context usage over the session (rolling history)",
+      "Icon": "resources/actions/trend.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.trend",
+      "States": [
+        {
+          "Image": "resources/actions/trend.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
+    },
+    {
+      "Name": "Cost Trend",
+      "Tooltip": "Sparkline of session cost over time (burn rate)",
+      "Icon": "resources/actions/costtrend.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.costtrend",
+      "States": [
+        {
+          "Image": "resources/actions/costtrend.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
+    },
+    {
+      "Name": "Dashboard",
+      "Tooltip": "Press to open a live popup dashboard of all sessions (status, mode, effort, tokens, cost, pending plan)",
+      "Icon": "resources/actions/dashboard.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.dashboard",
+      "States": [
+        {
+          "Image": "resources/actions/dashboard.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
+    },
+    {
+      "Name": "Fleet Beacon",
+      "Tooltip": "Natively-animated status light: amber pulse = a session needs you, blue spin = working, green pulse = unread result",
+      "Icon": "resources/actions/beacon.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.beacon",
+      "States": [
+        {
+          "Image": "resources/actions/beacon.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "property-inspector/inspector.html"
+    },
+    {
+      "Name": "Effort Dial",
+      "Tooltip": "Rotate to choose reasoning effort (low→xhigh, auto); press to apply via settings.json (live-reloaded, next turn)",
+      "Icon": "resources/actions/effortdial.png",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.effortdial",
+      "States": [
+        {
+          "Image": "resources/actions/effortdial.png"
+        }
+      ],
+      "Controllers": [
+        "Encoder"
+      ]
+    },
+    {
+      "Name": "Session Slot",
+      "Tooltip": "Fleet view: one live session per key, color-coded (blue working, amber needs you, green unread, red error). Press to pin the deck to it; press again to unpin. Set the slot number in settings.",
+      "Icon": "resources/actions/slot.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.slot",
+      "States": [
+        {
+          "Image": "resources/actions/slot.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "Macro",
+      "Tooltip": "Send a configurable command (e.g. /compact) to the focused terminal via clipboard paste",
+      "Icon": "resources/actions/macro.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.macro",
+      "States": [
+        {
+          "Image": "resources/actions/macro.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "Plan: Approve",
+      "Tooltip": "Contextual: approve the presented plan (dim when none)",
+      "Icon": "resources/actions/planapprove.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.planapprove",
+      "States": [
+        {
+          "Image": "resources/actions/planapprove.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "Plan: Keep Planning",
+      "Tooltip": "Contextual: reject the plan and keep planning (dim when none)",
+      "Icon": "resources/actions/planreject.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.planreject",
+      "States": [
+        {
+          "Image": "resources/actions/planreject.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "Plan: Ready",
+      "Tooltip": "Shows PLAN READY + step count when Claude presents a plan",
+      "Icon": "resources/actions/planhero.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.planhero",
+      "States": [
+        {
+          "Image": "resources/actions/planhero.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "/compact",
+      "Tooltip": "Press to send /compact to the focused terminal. Compact the conversation (context hygiene)",
+      "Icon": "resources/actions/cmdcompact.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cmdcompact",
+      "States": [
+        {
+          "Image": "resources/actions/cmdcompact.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "/clear",
+      "Tooltip": "Press to send /clear to the focused terminal. Clear the conversation",
+      "Icon": "resources/actions/cmdclear.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cmdclear",
+      "States": [
+        {
+          "Image": "resources/actions/cmdclear.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "/context",
+      "Tooltip": "Press to send /context to the focused terminal. Show context-window breakdown",
+      "Icon": "resources/actions/cmdcontext.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cmdcontext",
+      "States": [
+        {
+          "Image": "resources/actions/cmdcontext.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "/cost",
+      "Tooltip": "Press to send /cost to the focused terminal. Show token/cost usage",
+      "Icon": "resources/actions/cmdcost.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cmdcost",
+      "States": [
+        {
+          "Image": "resources/actions/cmdcost.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "/resume",
+      "Tooltip": "Press to send /resume to the focused terminal. Open the session picker",
+      "Icon": "resources/actions/cmdresume.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cmdresume",
+      "States": [
+        {
+          "Image": "resources/actions/cmdresume.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "/model",
+      "Tooltip": "Press to send /model to the focused terminal. Open the model picker",
+      "Icon": "resources/actions/cmdmodel.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cmdmodel",
+      "States": [
+        {
+          "Image": "resources/actions/cmdmodel.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "/AIUse",
+      "Tooltip": "Press to send /AIUse to the focused terminal. Run your AI-usage report (custom command)",
+      "Icon": "resources/actions/cmdusage.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cmdusage",
+      "States": [
+        {
+          "Image": "resources/actions/cmdusage.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "/switch-account",
+      "Tooltip": "Press to send /switch-account to the focused terminal. Switch Claude Code account (custom command)",
+      "Icon": "resources/actions/cmdswitch.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cmdswitch",
+      "States": [
+        {
+          "Image": "resources/actions/cmdswitch.png"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Name": "Smart Dial",
+      "Tooltip": "Context-aware knob: plan pending -> rotate steps, press approves; otherwise rotate live sessions, press pins/unpins",
+      "Icon": "resources/actions/smartdial.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.smartdial",
+      "States": [
+        {
+          "Image": "resources/actions/smartdial.png"
+        }
+      ],
+      "Controllers": [
+        "Encoder"
+      ]
+    },
+    {
+      "Name": "Command Dial",
+      "Tooltip": "Command palette on a knob: rotate through /compact /clear /cost ... press to send (list editable in settings)",
+      "Icon": "resources/actions/cmddial.png",
+      "PropertyInspectorPath": "property-inspector/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.claudedeck.cmddial",
+      "States": [
+        {
+          "Image": "resources/actions/cmddial.png"
+        }
+      ],
+      "Controllers": [
+        "Encoder"
+      ]
+    }
+  ]
+}
