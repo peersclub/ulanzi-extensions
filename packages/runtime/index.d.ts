@@ -8,6 +8,7 @@ export class Button {
   settings: Record<string, any>;
   active: boolean;
   setIcon(dataUri: string, text?: string): void;
+  setGifIcon(gifDataUri: string): void;
   setStateIcon(i: number, text?: string): void;
   hotkey(key: string): void;
   toast(msg: string): void;

@@ -498,7 +498,7 @@ const CLAUDE_LIVE = gifDataUrl(claudeBurstGif(palette.accent, { mode: "pulse" })
 const ClaudeLogo = defineAction({
   uuid: `${P}.claudelogo`,
   active(b) {
-    b.$UD.setGifDataIcon(b.context, CLAUDE_LIVE);
+    b.setGifIcon(CLAUDE_LIVE);
   },
 });
 
@@ -523,7 +523,7 @@ const Beacon = defineAction({
       if (face === b.state.face) return; // GIFs are big — only send on change
       b.state.face = face;
       if (face === "quiet") b.setIcon(BurstTile({ caption: "Fleet", dim: true }));
-      else b.$UD.setGifDataIcon(b.context, GIF_FACES[face]);
+      else b.setGifIcon(GIF_FACES[face]);
     };
     draw();
     b.addCleanup(watchSessions(app, draw));

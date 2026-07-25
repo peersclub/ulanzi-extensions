@@ -84,7 +84,18 @@ export class Button {
     }
     this._iconSeq = (this._iconSeq || 0) + 1; // press-echo restore guard
     this._lastIcon = dataUri;
+    this._lastIsGif = false;
+    if (!deviceOnline()) return; // deck unplugged: remember the face, send nothing
     this.$UD.setBaseDataIcon(this.context, dataUri, text);
+  }
+
+  /** Push an animated GIF face (gated on device presence like setIcon). */
+  setGifIcon(/** @type {string} */ gifDataUri) {
+    this._iconSeq = (this._iconSeq || 0) + 1;
+    this._lastIcon = gifDataUri;
+    this._lastIsGif = true;
+    if (!deviceOnline()) return;
+    this.$UD.setGifDataIcon(this.context, gifDataUri);
   }
   setStateIcon(/** @type {number} */ i, /** @type {string} */ text) {
     this.$UD.setStateIcon(this.context, i, text);
@@ -129,6 +140,22 @@ export class Button {
     this._timers.clear();
     for (const fn of this._cleanups) { try { fn(); } catch {} }
     this._cleanups.clear();
+  }
+}
+
+// --- Physical device presence -----------------------------------------------
+// When the deck is unplugged, every icon push to Studio is wasted — and can
+// trigger "device not connected" notification spam on each redraw burst (e.g.
+// focus-follow tab switches). Poll USB (~10s) and gate sends while absent;
+// on replug, every button re-sends its last face immediately.
+let DEVICE_ONLINE = true;
+const deviceOnline = () => DEVICE_ONLINE;
+function pollDevice() {
+  try {
+    execSync("ioreg -p IOUSB -w0 2>/dev/null | grep -qi ulanzi", { stdio: "pipe" });
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -230,9 +257,36 @@ export function definePlugin(cfg) {
         try { if ($UD.websocket?.readyState === 1) $UD.websocket.ping?.(); } catch {}
       }, 20_000);
 
+      // Device-presence gate: silence all pushes while the deck is unplugged;
+      // on replug, immediately restore every button's last face.
+      DEVICE_ONLINE = pollDevice();
+      dbg("device initially", DEVICE_ONLINE ? "online" : "OFFLINE (sends gated)");
+      setInterval(() => {
+        const now = pollDevice();
+        if (now === DEVICE_ONLINE) return;
+        DEVICE_ONLINE = now;
+        dbg("device", now ? "REPLUGGED — restoring faces" : "UNPLUGGED — gating sends");
+        if (now) {
+          for (const b of buttons.values()) {
+            if (!b._lastIcon) continue;
+            try {
+              if (b._lastIsGif) $UD.setGifDataIcon(b.context, b._lastIcon);
+              else $UD.setBaseDataIcon(b.context, b._lastIcon);
+            } catch {}
+          }
+        }
+      }, 10_000);
+
       $UD.connect(cfg.uuid);
       dbg("connect", cfg.uuid, "actions:", [...byUuid.keys()].join(","));
       $UD.onConnected(() => { reconnectTries = 0; log("connected"); dbg("connected"); cfg.onReady?.(); });
+
+      // Observe Studio's NOTIFY channel ('state') — device connect/disconnect
+      // and other host notices arrive here. Logged for diagnosis; used to gate
+      // pushes when the physical deck is absent.
+      try {
+        $UD.on?.("state", (d) => dbg("STATE notify:", JSON.stringify(d?.param ?? d).slice(0, 300)));
+      } catch {}
 
       $UD.onAdd((d) => {
         const { uuid, def } = defFor(d.context);
